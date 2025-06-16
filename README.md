@@ -1,3 +1,3 @@
-2-d physics rogue-lite platformer shooter
+2-d physics rogue-lite platformer shooter made by [landgreen]{https://github.com/landgreen}
 
-https://landgreen.github.io/n-gon/
+https://gavhu10.github.io/n-gon/
