@@ -261,6 +261,7 @@ const powerUps = {
         //disable clicking for 1/2 a second to prevent mistake clicks
         document.getElementById("choose-grid").style.pointerEvents = "none";
         document.body.style.cursor = "none";
+
         setTimeout(() => {
             document.body.style.cursor = "auto";
             document.getElementById("choose-grid").style.pointerEvents = "auto";
@@ -281,6 +282,14 @@ const powerUps = {
                 ctx.fillStyle = `rgba(150,150,150,0.9)`; //`rgba(221,221,221,0.6)`;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             });
+        }
+        if (document.fullscreenElement) {
+            mouseMove.isLockPointer = true
+            document.body.addEventListener('mousedown', mouseMove.pointerUnlock);//watches for mouse clicks that exit draft mode and self removes
+
+            document.exitPointerLock();
+            mouseMove.isPointerLocked = false
+            mouseMove.reset()
         }
     },
     endDraft(type, isCanceled = false) { //type should be a gun, tech, or field
@@ -308,7 +317,11 @@ const powerUps = {
             if (tech.isCancelTech && tech.cancelTechCount === 0 && type !== "entanglement") {
                 tech.cancelTechCount++
                 // powerUps.research.use('tech')
-                powerUps[type].effect();
+                // powerUps[type].effect();
+                requestAnimationFrame(() => { // generates new choices
+                    powerUps[type].effect();
+                    if (document.fullscreenElement) mouseMove.isLockPointer = false//this interacts with the mousedown event listener to exit pointer lock
+                });
                 return
             }
         }
@@ -329,6 +342,8 @@ const powerUps = {
         build.unPauseGrid()
         if (m.immuneCycle < m.cycle + 5) m.immuneCycle = m.cycle + 5; //player is immune to damage
         if (m.holdingTarget) m.drop();
+
+        if (document.fullscreenElement) mouseMove.isLockPointer = true//this interacts with the mousedown event listener to exit pointer lock
     },
     animatePowerUpGrab(color) {
         simulation.ephemera.push({
@@ -417,7 +432,16 @@ const powerUps = {
                     document.getElementById("choose-grid").classList.add('choose-grid');
                     document.getElementById("choose-grid").classList.remove('choose-grid-no-images');
                 }
+                if (document.fullscreenElement) mouseMove.isLockPointer = true//this interacts with the mousedown event listener to exit pointer lock
             });
+            if (document.fullscreenElement) {
+                mouseMove.isLockPointer = true
+                document.body.addEventListener('mousedown', mouseMove.pointerUnlock);//watches for mouse clicks that exit draft mode and self removes
+
+                document.exitPointerLock();
+                mouseMove.isPointerLocked = false
+                mouseMove.reset()
+            }
         },
     },
     warp: {
@@ -430,6 +454,7 @@ const powerUps = {
             level.levels[level.onLevel + 1] = name
             powerUps.warp.exit()
             level.nextLevel();
+            if (document.fullscreenElement) mouseMove.isLockPointer = true//this interacts with the mousedown event listener to exit pointer lock
             // simulation.clearNow = true
         },
         exit() {
@@ -488,7 +513,16 @@ const powerUps = {
 
             document.getElementById("exit").addEventListener("click", () => {
                 powerUps.warp.exit()
+                if (document.fullscreenElement) mouseMove.isLockPointer = true//this interacts with the mousedown event listener to exit pointer lock
             });
+            if (document.fullscreenElement) {
+                mouseMove.isLockPointer = true
+                document.body.addEventListener('mousedown', mouseMove.pointerUnlock);//watches for mouse clicks that exit draft mode and self removes
+
+                document.exitPointerLock();
+                mouseMove.isPointerLocked = false
+                mouseMove.reset()
+            }
         },
     },
     difficulty: {
@@ -592,7 +626,17 @@ const powerUps = {
                     level.initialPowerUps()
                     simulation.trails(30)
                 }
+                if (document.fullscreenElement) mouseMove.isLockPointer = true//this interacts with the mousedown event listener to exit pointer lock
             });
+
+            if (document.fullscreenElement) {
+                mouseMove.isLockPointer = true
+                document.body.addEventListener('mousedown', mouseMove.pointerUnlock);//watches for mouse clicks that exit draft mode and self removes
+
+                document.exitPointerLock()
+                mouseMove.isPointerLocked = false
+                mouseMove.reset()
+            }
 
             let setDifficultyText = function (isReset = true) {
                 for (let i = 1; i < 8; i++) {
@@ -722,18 +766,18 @@ const powerUps = {
                     if (m.alive && powerUps.research.count >= cost) {
                         requestAnimationFrame(cycle);
                         this.isMakingBots = true
-
                         if (!simulation.paused && !simulation.isChoosing && !(simulation.cycle % 60)) {
-                            powerUps.research.count -= cost
+                            // powerUps.research.count -= cost
+                            powerUps.research.expend(cost)
                             b.randomBot()
-                            if (tech.renormalization) {
-                                for (let i = 0; i < cost; i++) {
-                                    if (Math.random() < 0.47) {
-                                        m.fieldCDcycle = m.cycle + 20;
-                                        powerUps.spawn(m.pos.x + 100 * (Math.random() - 0.5), m.pos.y + 100 * (Math.random() - 0.5), "research");
-                                    }
-                                }
-                            }
+                            // if (tech.renormalization) {
+                            //     for (let i = 0; i < cost; i++) {
+                            //         if (Math.random() < 0.47) {
+                            //             m.fieldCDcycle = m.cycle + 20;
+                            //             powerUps.spawn(m.pos.x + 100 * (Math.random() - 0.5), m.pos.y + 100 * (Math.random() - 0.5), "research");
+                            //         }
+                            //     }
+                            // }
                         }
                     } else {
                         this.isMakingBots = false
@@ -759,6 +803,21 @@ const powerUps = {
             }
         },
         currentRerollCount: 0,
+        expend(count) { //runs when tech spend research
+            for (let i = 0; i < count; i++) {
+                if (powerUps.research.count > 0) {
+                    powerUps.research.changeRerolls(-1)
+                    if (tech.isResearchDamage) {
+                        m.damageDone *= 1.03
+                        simulation.inGameConsole(`<span class='color-var'>tech</span>.damage *= ${1.03} //peer review`);
+                        // tech.addJunkTechToPool(0.01)
+                    }
+                    if (tech.isResearchHeal) {
+                        powerUps.spawn(player.position.x + 150 * (Math.random() - 0.5), player.position.y + 150 * (Math.random() - 0.5), "heal", false);
+                    }
+                }
+            }
+        },
         use(type) { //runs when you actually research a list of selections, type can be field, gun, or tech
             if (tech.isJunkResearch && powerUps.research.currentRerollCount < 2) {
                 tech.addJunkTechToPool(0.01)
@@ -766,9 +825,12 @@ const powerUps = {
                 powerUps.research.changeRerolls(-1)
             }
             if (tech.isResearchDamage) {
-                m.damageDone *= 1.05
-                simulation.inGameConsole(`<span class='color-var'>tech</span>.damage *= ${1.05} //peer review`);
-                tech.addJunkTechToPool(0.01)
+                m.damageDone *= 1.03
+                simulation.inGameConsole(`<span class='color-var'>tech</span>.damage *= ${1.03} //peer review`);
+                // tech.addJunkTechToPool(0.01)
+            }
+            if (tech.isResearchHeal) {
+                powerUps.spawn(player.position.x + 150 * (Math.random() - 0.5), player.position.y + 150 * (Math.random() - 0.5), "heal", false);
             }
             powerUps.research.currentRerollCount++
             if (tech.isResearchReality) {
@@ -777,6 +839,9 @@ const powerUps = {
                 simulation.inGameConsole(`simulation.amplitude <span class='color-symbol'>=</span> ${Math.random()}`);
             }
             powerUps[type].effect();
+            if ((tech.isNoDraftPause || level.isNoPause) && document.fullscreenElement) {
+                mouseMove.isLockPointer = false//this interacts with the mousedown event listener to exit pointer lock
+            }
         },
     },
     heal: {
@@ -1358,7 +1423,7 @@ const powerUps = {
                                 tech.tech[choose].isBanished = true
                                 if (i === 0) simulation.inGameConsole(`options.length = ${optionLengthNoDuplicates} <em class='color-text'>//removed from pool by decoherence</em>`)
                             }
-                            removeOption(choose) //remove from future options pool to avoid repeats on this selection
+                            removeOption(choose) //remove from options pool to avoid repeats
 
                             //this flag prevents this option from being shown the next time you pick up a tech power up
                             //check if not extra choices from "path integral"
@@ -1429,7 +1494,7 @@ const powerUps = {
                                 document.body.style.cursor = "auto";
                                 document.getElementById("choose-grid").style.transitionDuration = "0s";
                             }
-                            if (count < 10 && simulation.isChoosing) {
+                            if (count < 10 && simulation.isChoosing && tech.isBrainstormActive) {
                                 requestAnimationFrame(cycle);
                             } else {
                                 tech.isBrainstormActive = false

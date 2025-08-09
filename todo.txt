@@ -1,44 +1,152 @@
 ******************************************************** NEXT PATCH **************************************************
 
-conductorBoss - every few seconds damages player if they are standing on the map 
-~1.2x density (health and collision damage) for all tier 3 mobs
-~1.3x density (health and collision damage) for all tier 4 mobs
+announcing level name and constraints using in-level text
 
-secret combos for
-  standing wave
-  perfect diamagnetism 
-  plasma torch
-  time dilation
-tech retrocausality removed
+von Neumann probe, ablative drones are included in endothermic's effects
+maul and rebar use 10->30 ammo
+tech reduced tolerances renamed standardization
+trainBoss is now slow near player and fast otherwise
+opened up reversed version of corridor level
 
-pilot wave can fire bullets while active
-pilot wave no longer drags bots
-
-nitinol tech: acoustic levitation - jump on the air for 2 seconds after leaving the ground
-  0.7x damage taken
-aerostat 2->2.5x damage, but only activates after being in the air for at least 1 second
-  no longer a field tech
-bot fabrication now shows up even when you have no research
-
-
-bug fixes
-
-
-******************************************************** BUGS ********************************************************
-
-
-dmg side bar is too long sometimes
-  maybe rework damage indications
-
-graphical bug - player can become crouched while not touching the ground if they exit the ground while crouched
+bugs
+  removed excessive console messages from anyon
+  activated hoizontally flipped mode on corridor level
+  fixed issue with localSettings.isHideHUD disabling constraint state settings with pause menu
 
 *********************************************************** TODO *****************************************************
 
-n-gon long term goals
-  more wild synergies, less balanced for rare combos
-  more subtle lore hints and world building
-  more secrets
-  more indication of when things occur
+T3, T4 (mostly T4)
+  reduce mob CD and move speed
+  reduce number of mob bulelts
+  increase damage taken
+
+perfect diamagnetism tech:   - using field while crouching will pull in blocks
+  releasing field will fire the blocks  (like control)
+  very strong, but high energy cost
+
+tech -  gain 5% duplication each time you expend a research orb
+
+gun tech upgrade that rewards pressing fire with a precise rhythm
+  press fire every 2-3 seconds and each time you get a "perfect" rhythm
+    gain 1.5x damage for that gun, but lose the bonus if you miss the timing
+    refund ammo cost for each perfect
+  gun:
+    shotgun?
+    super balls?
+  need to draw an on screen animation to help with timing
+
+persistent effects: effects that carry over to your next game: "for the next 3 runs of n-gon"
+  offer a research donation and get a random effect
+  new power up type
+    reward for completing reactor
+    large yellow?
+  effects
+    start with ____ power ups
+    the first research is free
+    start with ____ duplication
+    start with ____ damage
+    start with ____ damage reduction
+challenges
+  names: Epistemic logic, Temporal logic, relational semantics, Axiomatic systems, Modal realism
+  if you ______ for a level
+    don't crouch
+    don't fire
+    don't use field
+    don't get taken damage/get hit
+    keep energy above 90
+  get _______:
+    damage, damage taken, power ups, duplication
+  for the next ___ choices
+    always pick the last choice
+    research once
+    pick only JUNK tech
+  at the end of the next level
+    leave __ mobs alive
+    leave a boss alive
+    leave __ power ups
+
+see if LLM can improve the performance of
+  line of sight code?
+
+new boss - murmuration of small mobs (maybe 30-50)
+  first mob of this type in mob array controls the others
+    commands
+      every 5 seconds have %5 mobs fire at player (if in line of sight)
+      use seePlayerByHistory to set goal for the murmuration
+        if one mob can't see goal have them target other mobs in the murmuration
+    if no more mobs left on death spawn power ups
+
+letters - not sure how to actually use them...
+  !training levels
+    write out current objective on level background
+    since it can only make letters in alphabet, all instructions would need to be customized
+    maybe just a message on the first training level telling them to look in the console
+  initial
+    !added instructions for inputs
+      maybe only if new player...
+    !let player know what lore chapter they are on
+      especially pacifist chapter
+  !run ephemera for 6 seconds with name of each level written somewhere on map
+    not sure this is a good idea, maybe do it very fast
+    display directly below level entrance
+
+tech, field? base game? - doing damage heals 1x (less?) of the last damage taken
+  so you can't heal if you take damage twice before doing enough damage
+    should work similar to the cloaking heal tech 
+  how much damage? change in m.health needs to match total damage done to mobs
+  makes sense as a field tech
+    ?plasma torch, pilot wave, molecular assembler
+    couple scale with coupling
+
+super balls tech - that hit blocks produce 10 balls?
+  destroy the block after 3 hits?
+
+nail gun guntech - needles follow you around until you get close to a mob and then they all fire
+  like the spell in eldin ring with the 3 swords
+
+tech:   -  scale max energy with current health
+  nonrefundable
+tech:   -  set max health equal to max energy
+tech:   -  set max energy equal to max health
+  names
+    Free energy
+    stress-energy tensor
+    binding energy
+    condensed matter
+    mass hyperboloid
+    off shell
+    stress–energy tensor
+    nuclear pasta
+    Lagrangian
+
+missile tech - missiles explode when they hit walls
+  missiles explode a second time, 30 cycles later
+    second explosion isn't in the same spot.
+      it follows the missile?  if possible
+      it targets mobs that got hit by the first explosions?
+
+tech:   - make a few random types of special bullets for super balls
+  super ball type ideas:
+    shoot lasers
+      vertical laser directed down
+      random directions
+      2 horizontal lasers
+    damaging aura
+    duplicate ball after hitting map or mob
+      but don't extend life span
+    freeze mobs  (with aura)
+    stun mobs (bigger ball)
+    aim at nearby mobs after hitting: mob or map
+    explode every couple seconds
+    extra long life
+      prevent it from getting slow, like reactor bosses
+    randomly change direction
+    fire nails at nearby mobs
+    attract mobs, like black hole
+    attract other super balls and grow as they merge
+
+tech:   - give ____ (nails) a tail that damages mobs.
+  use plasma code that runs in bullet history
 
 constraint - periodic darkness
   random delay and duration of darkness?
@@ -50,16 +158,10 @@ tech:  - repeat all _____ effects a second time
   on getting hit
 
 wormhole tech:  - random bullets fire from both wormholes
+  fire b.needle() for 3 seconds after making a new wormhole
+    need to adjust b.needle() for positions that aren't the player's
 
-secret codes
-  negative mass
-    pull in blocks and then push them away
-  metamaterial cloaking
-    teleport behind the mob you are looking at?
-    convert __ health into a boost power up?
-
-
-add sounds this summer?  see ***sound*** section below
+add sounds?  see ***sound*** section below
   Web Audio API
   AI sound generation survey (June 2025)
     https://elevenlabs.io/sound-effects
@@ -76,12 +178,6 @@ add sounds this summer?  see ***sound*** section below
       advanced features
       average songs
     
-
-
-
-
-tech:   -  scale max energy with current health
-
 power up: entanglement - make it spawn from killing a mob that kinda looks like the player?
 
 tech:  - limit the total number of tech 
@@ -123,35 +219,6 @@ field tech: - use _____ to refresh current choices  (or give +6 choices for the 
     all your energy 
       produce a new choice for each 30 energy
 
-new class of effects:  for the next 3 runs of n-gon
-  offer a research donation and get a random effect
-  new power up type
-    reward for completing reactor
-    large yellow?
-  effects
-    start with ____ power ups
-    the first research is free
-    start with ____ duplication
-    start with ____ damage
-    start with ____ damage reduction
-
-tech:   player behavior challenges
-  if you ______ for a level
-    don't crouch
-    don't fire
-    don't use field
-    don't get taken damage/get hit
-    keep energy above 90
-  get _______:
-    damage, damage taken, power ups, duplication
-cycle challenge each level?, no too confusing, but maybe randomize each time it shows up
-how to code?
-  ephemera that watches key input states?
-  rewrite event listener?
-
-look into locking mouse into the browser again
-  full screen
-
 mob status: confused - I could rotate the velocity that mobs have gently over 1-2 seconds. that might work.
 
 JUNK: Tracepath (literally traces M's path for a bit, sort of like snakeBoss)
@@ -168,7 +235,6 @@ mob: weepers - bullet
   player can see
     invincible
     frozen/not moving/slow moving?
-
 
 !conformal infinity - after making a wormhole, subsequent wormholes generate energy 10 energy for the next 5 seconds
   replace holographic principle?
@@ -239,40 +305,6 @@ tech - benefit in the first 20 seconds of the level
 soft body boss?
   search    softBody(x, y, angle = 0, isAttached = true, len = 15, radius = 20, stiffness = 1, damping = 1) {
 
-use ←↑→↓↖↗↘↙ combos to allow fields to have special actions
-  how to limit spam?
-     on cooldown
-      timer or once per level
-     energy cost
-     research cost
-     toggle modes
-  combos are listed in white text in field description, and console message when getting field
-    shows up on highlight, and mouse over in experiment mode
-  field ideas:
-    standing wave
-      push mobs away are any distance
-      pull mobs towards you
-    perfect diamagnetism
-    negative mass
-    molecular assembler - done
-    plasma torch
-      move around like you have recoil, move kinda fast so it's hard to control
-        like form recoil but fast
-    time dilation
-    metamaterial cloaking
-    pilot wave - done
-    wormhole
-      toggle bullets entering with wormholes
-        and player??
-      shoot out all the blocks that were sucked in this level (maybe cap at like 10?, cap with energy spent to fire)
-        are block sizes stored properly?  because they shrink before they get eaten...
-          store vertices on the body object if one does already exists
-          after eating store the saved vertices
-        where to fire blocks from and in what direction?
-          target mobs?
-          fire from player (and draw a wormhole looking graphic)
-    grappling hook
-
 new level idea: large map sized blocks that can't be destroyed that the player walks on as a part of the level
   eventually the blocks fall
     after fall level progresses to a phase 2 to clean up the blocks or leave them
@@ -298,14 +330,16 @@ new level idea:  escort mission
       use the motion sense lasers
 
   
-tech:  - remove the research costs of all tech
+tech: conformal - remove the research costs of all tech
+  conformal - similar rules for small and big scales  linked to holographic principle
   there's about 15 tech with a research cost
-!!conformal - similar rules for small and big scales  linked to holographic principle
-!!holonomy - parallel transport of a vector leads to movement (applies to curved space)
+
+tech: holonomy - parallel transport of a vector leads to movement (applies to curved space)
   when far away from your wormhole regenerate 1% of your max energy per second
   when far away from your wormhole reduce damage taken
   heal last hit damage after enter wormhole
-!!quasar - plasma torch from both ends of wormhole
+
+tech: quasar - plasma torch from both ends of wormhole
   only after wormhole eats a block fire?
     or just increase plasma length after eating block?
 
@@ -1381,6 +1415,7 @@ if pause is pressed while selecting power ups, display pause menu on top of sele
   nail gun - Screenprint
   shotgun - blueprint by Dan McPharlin
   grenades, missiles, explosions - vibrant fireball explosion sonic shockwave ring art by Victo Ngai --ar 3:2 --v 5 --s 750
+    Detailed Intricate Fine lines Surreal styles Vivid colors Moody colors
   spores - turquoise black spores on a white background full color scientific anatomy by Ernst Haeckel
   drones - insect quadcopter tilt-shift photography
   super balls - By Akari Toriyama
@@ -1474,7 +1509,7 @@ possible names for tech
   cyanoacrylate - superglue use for a slowing effect?
   math terms - integral, derivative, Laplace transform, inflection point
   quasicrystals - something with low friction, maybe defense?
-  Coalescence - things merging together like clouds.  maybe mergin power ups?
+  coalescence - things merging together like clouds.  maybe mergin power ups?
   trihydrogen cation - common molecule in space, dark matter tech?
   superradiance - laser tech
   cryocoolers - freezing effects
@@ -1486,15 +1521,60 @@ possible names for tech
     every few seconds pick a random skin tech?
   De Sitter space - simple model of universe related to general relativity (mass-energy?)
   active optics - something with lasers?  maybe something with diffuse beam getting smaller
-  Quintessence - related to dark energy
+  quintessence - related to dark energy
   biofilm - something defensive?  related to spores?
-  Thermogalvanic - makes things cold, for no energy
-  Intron - noncoding DNA that separates regions of coding DNA,  use for JUNK tech
+  thermogalvanic - makes things cold, for no energy
+  intron - noncoding DNA that separates regions of coding DNA,  use for JUNK tech
   virtual particles - can have these properties: imaginary mass, violation of the conservation of energy, violation of causality, traveling faster than light or backwards in time, popping in and out of the vacuum via vacuum fluctuations
   Sintering - the process of compacting and forming a solid mass of material by pressure[1] or heat[2] without melting it to the point of liquefaction. Sintering happens as part of a manufacturing process used with metals, ceramics, plastics, 
   Kolmogorov complexity - how long a computer program for an algorithm is
+  r-selection - flea/worm tech - opposite of K-selection, so lots of weaker sproes/fleas
+  acousto-optic modulator - sound makes light have a different frequency (maybe use for laser tech with many colors)
+  gravity wave - 
+  tuple - a finite list
+  Navier–Stokes - equations for the movement of fluids
+
+
+******************************************************** BUGS ********************************************************
+
+still getting some hidden mouse on fullscreen when drafting,
+  seems to occur when the game is slow
+    or maybe it occurs when the game pauses wen player takes damage?
+hides mouse when -> (eternalism or no pause) + fullscreen + show AI images
+  this was still broken in previous patch, probably never worked
+  maybe just disable eternalism / no pause if in fullscreen mode and AI images
+  maybe just disable eternalism / no pause always
+
+
+double bots on start of level
+  towers, flocculation, highrise
+  occured with only the base bot tech: sound-bot  giving 2x sound-bot, then back to 1 on next level
+  occured again on skyscrappers with 2x laser-bots, but should only be one
+    https://landgreen.github.io/n-gon/index.html?&seed=88132&gun0=drones&gun1=mine&tech0=quenching&tech1=sentry&tech2=energy%20conservation&tech3=boom-bot&tech4=gauge&tech5=nail-bot&tech6=enthalpy&molMode=0&field=metamaterial%20cloaking&difficulty=6
+    https://landgreen.github.io/n-gon/index.html?&seed=99677&gun0=laser&gun1=super%20balls&tech0=expansion&tech1=superposition&tech2=energy%20conservation&tech3=polyurethane%20foam&tech4=quasiparticles&tech5=laser-bot&tech6=recycling&molMode=1&field=standing%20wave&difficulty=5
+
+dmg side bar is too long sometimes
+  maybe rework damage indications
+
+graphical bug - player can become crouched while not touching the ground if they exit the ground while crouched
+
+safari browser looks weird with several stroke animations
+  might be related to dashed stroke 
+    ctx.setLineDash([200, 200]);
+  examples
+    going to next level, doorway animation
+    plasma field secret combo lightning
+
+on floccuation level there is a map element with poorly formed vertices
+  matter.min.js:16 matter-js: Bodies.fromVertices: Install the 'poly-decomp' library and use Common.setDecomp or provide 'decomp' as a global to decompose concave vertices.
 
 ******************************************************* DESIGN ******************************************************
+
+n-gon long term goals
+  more wild synergies, less balanced for rare combos
+  more subtle lore hints and world building
+  more secrets
+  more indication of when things occur
 
 priorities    
   synergies between tech

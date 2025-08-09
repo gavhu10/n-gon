@@ -2,83 +2,6 @@
 //*********************************************************************
 const simulation = {
     loop() { }, //main game loop, gets set to normal or testing loop
-    // normalLoop() {
-    //     try {
-    //         simulation.gravity();
-    //         Engine.update(engine, simulation.delta);
-    //         simulation.wipe();
-    //         simulation.textLog();
-    //         if (m.onGround) {
-    //             m.groundControl()
-    //         } else {
-    //             m.airControl()
-    //         }
-    //         m.move();
-    //         m.look();
-    //         simulation.camera();
-    //         level.custom();
-    //         powerUps.do();
-    //         mobs.draw();
-    //         simulation.draw.cons();
-    //         simulation.draw.body();
-    //         if (!m.isTimeDilated) mobs.loop();
-    //         m.draw();
-    //         m.hold();
-    //         level.customTopLayer();
-    //         simulation.draw.drawMapPath();
-    //         b.fire();
-    //         b.bulletRemove();
-    //         b.bulletDraw();
-    //         if (!m.isTimeDilated) b.bulletDo();
-    //         simulation.drawCircle();
-    //         simulation.runEphemera();
-    //         ctx.restore();
-    //     } catch (error) {
-    //         simulation.inGameConsole(`<strong style='color:red;'>ERROR:</strong> ${(error.stack && error.stack.replace(/\n/g, "<br>")) || (error.message + ` <u>${error.filename}:${error.lineno}</u>`)}`);
-    //     } finally {
-    //         simulation.drawCursor();
-    //     }
-    // },
-    // testingLoop() {
-    //     try {
-    //         simulation.gravity();
-    //         Engine.update(engine, simulation.delta);
-    //         simulation.wipe();
-    //         simulation.textLog();
-    //         if (m.onGround) {
-    //             m.groundControl()
-    //         } else {
-    //             m.airControl()
-    //         }
-    //         m.move();
-    //         m.look();
-    //         simulation.camera();
-    //         level.custom();
-    //         m.draw();
-    //         m.hold();
-    //         level.customTopLayer();
-    //         simulation.draw.wireFrame();
-    //         if (input.fire && m.fireCDcycle < m.cycle) {
-    //             m.fireCDcycle = m.cycle + 15; //fire cooldown       
-    //             for (let i = 0, len = mob.length; i < len; i++) {
-    //                 if (Vector.magnitudeSquared(Vector.sub(mob[i].position, simulation.mouseInGame)) < mob[i].radius * mob[i].radius) {
-    //                     console.log(mob[i])
-    //                 }
-    //             }
-    //         }
-    //         simulation.draw.cons();
-    //         simulation.draw.testing();
-    //         simulation.drawCircle();
-    //         simulation.runEphemera();
-    //         simulation.constructCycle()
-    //     } catch (error) {
-    //         simulation.inGameConsole(`<strong style='color:red;'>ERROR:</strong> ${(error.stack && error.stack.replace(/\n/g, "<br>")) || (error.message + ` <u>${error.filename}:${error.lineno}</u>`)}`);
-    //     } finally {
-    //         ctx.restore();
-    //         simulation.testingOutput();
-    //         simulation.drawCursor();
-    //     }
-    // },
     normalLoop() {
         simulation.gravity();
         Engine.update(engine, simulation.delta);
@@ -254,7 +177,7 @@ const simulation = {
     paused: false,
     isChoosing: false,
     testing: false, //testing mode: shows wire frame and some variables
-    cycle: 0, //total cycles, 60 per second
+    cycle: 600, //total cycles, 60 per second
     fpsCap: null, //limits frames per second to 144/2=72,  on most monitors the fps is capped at 60fps by the hardware
     fpsCapDefault: 72, //use to change fpsCap back to normal after a hit from a mob
     isCommunityMaps: false,
@@ -659,23 +582,18 @@ const simulation = {
                                 // Flip the canvas vertically
                                 ctx.translate(0, canvas.height); // Move the origin down to the bottom
                                 ctx.scale(1, -1); // Flip vertically
-                                simulation.isInvertedVertical = true
                                 //flip mouse Y again to make sure it caught
-                                mouseMove = function (e) {
-                                    simulation.mouse.x = e.clientX;
-                                    simulation.mouse.y = window.innerHeight - e.clientY;
-                                }
+                                // mouseMove.reset()
                             } else {
                                 requestAnimationFrame(loop);
                                 ctx.translate(0, canvas.height * count / frames);
                                 ctx.scale(1, 1 - 2 * count / frames);
                             }
-                            if (count === Math.floor(frames / 2)) {
+                            if (count > Math.floor(frames / 2) && !simulation.isInvertedVertical) {
                                 //flip mouse Y at the 1/2 way point
-                                mouseMove = function (e) {
-                                    simulation.mouse.x = e.clientX;
-                                    simulation.mouse.y = window.innerHeight - e.clientY;
-                                }
+                                simulation.isInvertedVertical = true
+                                mouseMove.reset()
+                                simulation.mouse.y = canvas.height - simulation.mouse.y
                                 //passFunction probably flips the map elements 
                                 passFunction()
                             }
@@ -689,10 +607,9 @@ const simulation = {
                 ctx.scale(1, -1); // Flip vertically
                 //flip mouse Y
                 simulation.isInvertedVertical = true
-                mouseMove = function (e) {
-                    simulation.mouse.x = e.clientX;
-                    simulation.mouse.y = window.innerHeight - e.clientY;
-                }
+                mouseMove.reset()
+                simulation.mouse.y = canvas.height - simulation.mouse.y
+
             }
         }
     },
@@ -710,17 +627,21 @@ const simulation = {
                             // requestAnimationFrame(() => { ctx.reset(); });
                             // ctx.translate(0, 0);
                             // ctx.scale(1, 1);
-                            simulation.isInvertedVertical = false
+
                             //flip mouse Y again to make sure it caught
-                            mouseMove = mouseMoveDefault
+                            // mouseMove.reset()
 
                         } else {
                             requestAnimationFrame(loop);
                             ctx.translate(0, canvas.height - canvas.height * count / frames);
                             ctx.scale(1, -1 + 2 * count / frames);
                         }
-                        if (count === Math.floor(frames / 2)) {
-                            mouseMove = mouseMoveDefault//flip mouse Y at the 1/2 way point
+                        if (count > Math.floor(frames / 2) && simulation.isInvertedVertical) {
+                            simulation.isInvertedVertical = false
+                            //flip mouse Y at the 1/2 way point
+                            mouseMove.reset()
+                            simulation.mouse.y = canvas.height - simulation.mouse.y
+
                             passFunction()//passFunction probably draws new map elements 
                         }
                     }
@@ -731,7 +652,9 @@ const simulation = {
             ctx.reset();
             ctx.font = "25px Arial";
             simulation.isInvertedVertical = false
-            mouseMove = mouseMoveDefault
+            mouseMove.reset()
+            simulation.mouse.y = canvas.height - simulation.mouse.y
+
         }
     },
     translatePlayerAndCamera(where, isTranslateBots = true) {
@@ -881,6 +804,14 @@ const simulation = {
     },
     firstRun: true,
     splashReturn() {
+        if (document.fullscreenElement) {
+            mouseMove.isLockPointer = true
+            document.body.addEventListener('mousedown', mouseMove.pointerUnlock);//watches for mouse clicks that exit draft mode and self removes
+
+            document.exitPointerLock();
+            mouseMove.isPointerLocked = false
+            mouseMove.reset()
+        }
         document.getElementById("previous-seed").innerHTML = `previous seed: <span style="font-size:80%;">${Math.initialSeed}</span><br>`
         document.getElementById("seed").value = Math.initialSeed = Math.seed //randomize initial seed
 
@@ -970,7 +901,7 @@ const simulation = {
         ctx.globalCompositeOperation = "source-over"
         ctx.shadowBlur = 0;
 
-        mouseMove = mouseMoveDefault
+        mouseMove.reset()
         requestAnimationFrame(() => {
             ctx.setTransform(1, 0, 0, 1, 0, 0); //reset warp effect
             ctx.setLineDash([]) //reset stroke dash effect
@@ -1154,7 +1085,7 @@ const simulation = {
                             for (let i = 0; i < bullet.length; i++) {
                                 if (bullet[i].botType) Matter.Body.setPosition(bullet[i], Vector.sub(bullet[i].position, change));
                             }
-                        } else { //get hurt and go to start
+                        } else { //go to start
                             Matter.Body.setVelocity(player, { x: 0, y: 0 });
                             Matter.Body.setPosition(player, { x: level.enter.x + 50, y: level.enter.y - 20 });
                             // move bots
@@ -1289,6 +1220,7 @@ const simulation = {
         simulation.fpsInterval = 1000 / simulation.fpsCap;
         simulation.then = Date.now();
         requestAnimationFrame(cycle); //starts game loop
+        if (document.fullscreenElement) mouseMove.isLockPointer = true //this interacts with the mousedown event listener to exit pointer lock
     },
     clearTimeouts() {
         let id = window.setTimeout(function () { }, 0);
@@ -2047,6 +1979,451 @@ const simulation = {
             ctx.fillStyle = "rgba(0, 0, 255, 0.25)";
             ctx.fill();
             // ctx.stroke();
+        },
+        font: {
+            word: new Path2D(),
+            xPos: 0,
+            yPos: 0,
+            drawString(text, x, y) {
+                this.xPos = x
+                this.yPos = y
+                const letters = text.toLowerCase().split('')
+                letters.forEach((letter, index) => {
+                    if (letter >= 'a' && letter <= 'z' && this[letter]) {
+                        this[letter]()
+                        if (index < letters.length - 1) {
+                            this.xPos += 29
+                        }
+                    } else if (letter === ' ') {
+                        this.xPos += 29
+                    }
+                })
+            },
+            a() {
+                this.word.moveTo(this.xPos - 1, this.yPos + 40)
+                this.word.lineTo(this.xPos + 10, this.yPos + 0)
+                this.word.lineTo(this.xPos + 21, this.yPos + 40)
+                this.word.moveTo(this.xPos + 5, this.yPos + 20)
+                this.word.lineTo(this.xPos + 15, this.yPos + 20)
+            },
+            b() {
+                this.word.moveTo(this.xPos + 1, this.yPos);
+                this.word.lineTo(this.xPos + 1, this.yPos + 40);
+                this.word.moveTo(this.xPos + 1, this.yPos);
+                this.word.bezierCurveTo(this.xPos + 22, this.yPos, this.xPos + 22, this.yPos + 20, this.xPos + 1, this.yPos + 20);
+                this.word.moveTo(this.xPos + 1, this.yPos + 20);
+                this.word.bezierCurveTo(this.xPos + 25, this.yPos + 20, this.xPos + 25, this.yPos + 40, this.xPos + 1, this.yPos + 40);
+            },
+            c() {
+                // Calculate the starting point on the ellipse to move to
+                const startAngle = 0.2 * Math.PI;
+                const startX = (this.xPos + 11) + (11 * Math.cos(startAngle));
+                const startY = (this.yPos + 20) + (20 * Math.sin(startAngle));
+                this.word.moveTo(startX, startY);
+
+                // Draws a smooth partial ellipse for the 'C'
+                this.word.ellipse(this.xPos + 11, this.yPos + 20, 11, 20, 0, startAngle, 1.8 * Math.PI);
+            },
+            d() {
+                this.word.moveTo(this.xPos + 0, this.yPos);
+                this.word.lineTo(this.xPos + 0, this.yPos + 40);
+                // this.word.moveTo(this.xPos + 3, this.yPos + 40);
+                this.word.arcTo(this.xPos + 19, this.yPos + 40, this.xPos + 19, this.yPos + 20, 20);
+                this.word.arcTo(this.xPos + 19, this.yPos, this.xPos + 1, this.yPos, 20);
+            },
+            e() {
+                this.word.moveTo(this.xPos + 19, this.yPos + 0)
+                this.word.lineTo(this.xPos + 0, this.yPos + 0)
+                this.word.lineTo(this.xPos + 0, this.yPos + 20)
+                this.word.lineTo(this.xPos + 17, this.yPos + 20)
+                this.word.moveTo(this.xPos + 0, this.yPos + 20)
+                this.word.lineTo(this.xPos + 0, this.yPos + 40)
+                this.word.lineTo(this.xPos + 19, this.yPos + 40)
+            },
+            f() {
+                this.word.moveTo(this.xPos + 0, this.yPos + 0)
+                this.word.lineTo(this.xPos + 0, this.yPos + 40)
+                this.word.moveTo(this.xPos + 0, this.yPos + 0)
+                this.word.lineTo(this.xPos + 19, this.yPos + 0)
+                this.word.moveTo(this.xPos + 0, this.yPos + 20)
+                this.word.lineTo(this.xPos + 16, this.yPos + 20)
+            },
+            g() {
+                // Rounded G with curved edges
+                this.word.moveTo(this.xPos + 17, this.yPos + 6);
+                this.word.bezierCurveTo(this.xPos + 17, this.yPos + 2, this.xPos + 14, this.yPos + 0, this.xPos + 8, this.yPos + 0);
+                this.word.bezierCurveTo(this.xPos + 3, this.yPos + 0, this.xPos + 0, this.yPos + 4, this.xPos + 0, this.yPos + 20);
+                this.word.bezierCurveTo(this.xPos + 0, this.yPos + 36, this.xPos + 3, this.yPos + 40, this.xPos + 8, this.yPos + 40);
+                this.word.bezierCurveTo(this.xPos + 14, this.yPos + 40, this.xPos + 17, this.yPos + 36, this.xPos + 17, this.yPos + 30);
+                this.word.lineTo(this.xPos + 17, this.yPos + 20);
+                this.word.lineTo(this.xPos + 10, this.yPos + 20);
+            },
+            // g() {
+            //     this.word.moveTo(this.xPos + 17, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 40)
+            //     this.word.lineTo(this.xPos + 17, this.yPos + 40)
+            //     this.word.lineTo(this.xPos + 17, this.yPos + 20)
+            //     this.word.lineTo(this.xPos + 10, this.yPos + 20)
+            // },
+            h() {
+                this.word.moveTo(this.xPos + 0, this.yPos + 0)
+                this.word.lineTo(this.xPos + 0, this.yPos + 40)
+                this.word.moveTo(this.xPos + 0, this.yPos + 20)
+                this.word.lineTo(this.xPos + 17, this.yPos + 20)
+                this.word.lineTo(this.xPos + 17, this.yPos + 40)
+                this.word.moveTo(this.xPos + 17, this.yPos + 20)
+                this.word.lineTo(this.xPos + 17, this.yPos + 0)
+            },
+            i() {
+                this.word.moveTo(this.xPos + 0, this.yPos + 0)
+                this.word.lineTo(this.xPos + 19, this.yPos + 0)
+                this.word.moveTo(this.xPos + 9, this.yPos + 0)
+                this.word.lineTo(this.xPos + 9, this.yPos + 40)
+                this.word.moveTo(this.xPos + 0, this.yPos + 40)
+                this.word.lineTo(this.xPos + 19, this.yPos + 40)
+            },
+            // j() {
+            //     this.word.moveTo(this.xPos + 18, this.yPos + 0);
+            //     this.word.lineTo(this.xPos + 18, this.yPos + 40);
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 40);
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 30);
+            // },
+            j() {
+                // Rounded J with curved bottom
+                this.word.moveTo(this.xPos + 18, this.yPos + 0);
+                this.word.lineTo(this.xPos + 18, this.yPos + 30);
+                this.word.bezierCurveTo(this.xPos + 18, this.yPos + 37, this.xPos + 14, this.yPos + 40, this.xPos + 8, this.yPos + 40);
+                this.word.bezierCurveTo(this.xPos + 2, this.yPos + 40, this.xPos + 0, this.yPos + 37, this.xPos + 0, this.yPos + 30);
+            },
+            k() {
+                this.word.moveTo(this.xPos + 0, this.yPos + 0)
+                this.word.lineTo(this.xPos + 0, this.yPos + 40)
+                this.word.moveTo(this.xPos + 0, this.yPos + 20)
+                this.word.lineTo(this.xPos + 19, this.yPos + 0)
+                this.word.moveTo(this.xPos + 4, this.yPos + 17)
+                this.word.lineTo(this.xPos + 19, this.yPos + 40)
+            },
+            l() {
+                this.word.moveTo(this.xPos + 1, this.yPos + 0)
+                this.word.lineTo(this.xPos + 1, this.yPos + 40)
+                this.word.lineTo(this.xPos + 20, this.yPos + 40)
+            },
+            m() {
+                this.word.moveTo(this.xPos + 0, this.yPos + 40)
+                this.word.lineTo(this.xPos + 0, this.yPos + 0)
+                this.word.lineTo(this.xPos + 9, this.yPos + 20)
+                this.word.lineTo(this.xPos + 17, this.yPos + 0)
+                this.word.lineTo(this.xPos + 17, this.yPos + 40)
+            },
+            n() {
+                this.word.moveTo(this.xPos + 0, this.yPos + 40)
+                this.word.lineTo(this.xPos + 0, this.yPos + 0)
+                this.word.lineTo(this.xPos + 17, this.yPos + 40)
+                this.word.lineTo(this.xPos + 17, this.yPos + 0)
+            },
+            o() {
+                this.word.moveTo(this.xPos + 20, this.yPos + 20);
+                this.word.ellipse(this.xPos + 9, this.yPos + 20, 11, 20, 0, 0, 2 * Math.PI);
+            },
+            p() {
+                // Rounded P with curved top section
+                this.word.moveTo(this.xPos + 0, this.yPos + 40);
+                this.word.lineTo(this.xPos + 0, this.yPos + 0);
+                this.word.lineTo(this.xPos + 10, this.yPos + 0);
+                this.word.bezierCurveTo(this.xPos + 15, this.yPos + 0, this.xPos + 18, this.yPos + 3, this.xPos + 18, this.yPos + 10);
+                this.word.bezierCurveTo(this.xPos + 18, this.yPos + 17, this.xPos + 15, this.yPos + 20, this.xPos + 10, this.yPos + 20);
+                this.word.lineTo(this.xPos + 0, this.yPos + 20);
+            },
+            // p() {
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 40)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 18, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 18, this.yPos + 20)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 20)
+            // },
+            q() {
+                this.word.moveTo(this.xPos + 20, this.yPos + 20);
+                this.word.ellipse(this.xPos + 9, this.yPos + 20, 11, 20, 0, 0, 2 * Math.PI);
+                this.word.moveTo(this.xPos + 12, this.yPos + 28);
+                this.word.lineTo(this.xPos + 20, this.yPos + 40);
+            },
+            r() {
+                // Rounded R with curved top section
+                this.word.moveTo(this.xPos + 0, this.yPos + 40);
+                this.word.lineTo(this.xPos + 0, this.yPos + 0);
+                this.word.lineTo(this.xPos + 10, this.yPos + 0);
+                this.word.bezierCurveTo(this.xPos + 15, this.yPos + 0, this.xPos + 18, this.yPos + 3, this.xPos + 18, this.yPos + 10);
+                this.word.bezierCurveTo(this.xPos + 18, this.yPos + 17, this.xPos + 15, this.yPos + 20, this.xPos + 10, this.yPos + 20);
+                this.word.lineTo(this.xPos + 0, this.yPos + 20);
+                this.word.moveTo(this.xPos + 8, this.yPos + 20);
+                this.word.lineTo(this.xPos + 18, this.yPos + 40);
+            },
+            // r() {
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 40)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 17, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 17, this.yPos + 20)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 20)
+            //     this.word.lineTo(this.xPos + 19, this.yPos + 40)
+            // },
+            // s() {
+            //     this.word.moveTo(this.xPos + 18, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 20)
+            //     this.word.lineTo(this.xPos + 18, this.yPos + 20)
+            //     this.word.lineTo(this.xPos + 18, this.yPos + 40)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 40)
+            // },
+            s() {
+                // Rounded S shape using curves
+                this.word.moveTo(this.xPos + 18, this.yPos + 6);
+                this.word.bezierCurveTo(this.xPos + 18, this.yPos + 2, this.xPos + 15, this.yPos + 0, this.xPos + 9, this.yPos + 0);
+                this.word.bezierCurveTo(this.xPos + 3, this.yPos + 0, this.xPos + 0, this.yPos + 3, this.xPos + 0, this.yPos + 8);
+                this.word.bezierCurveTo(this.xPos + 0, this.yPos + 13, this.xPos + 3, this.yPos + 16, this.xPos + 9, this.yPos + 18);
+                this.word.bezierCurveTo(this.xPos + 15, this.yPos + 20, this.xPos + 18, this.yPos + 24, this.xPos + 18, this.yPos + 32);
+                this.word.bezierCurveTo(this.xPos + 18, this.yPos + 37, this.xPos + 15, this.yPos + 40, this.xPos + 9, this.yPos + 40);
+                this.word.bezierCurveTo(this.xPos + 3, this.yPos + 40, this.xPos + 0, this.yPos + 37, this.xPos + 0, this.yPos + 34);
+            },
+            t() {
+                this.word.moveTo(this.xPos - 1, this.yPos + 0)
+                this.word.lineTo(this.xPos + 21, this.yPos + 0)
+                this.word.moveTo(this.xPos + 10, this.yPos + 0)
+                this.word.lineTo(this.xPos + 10, this.yPos + 40)
+            },
+            // u() {
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 40)
+            //     this.word.lineTo(this.xPos + 17, this.yPos + 40)
+            //     this.word.lineTo(this.xPos + 17, this.yPos + 0)
+            // },
+            u() {
+                // Rounded U with curved bottom
+                this.word.moveTo(this.xPos + 0, this.yPos + 0);
+                this.word.lineTo(this.xPos + 0, this.yPos + 30);
+                this.word.bezierCurveTo(this.xPos + 0, this.yPos + 37, this.xPos + 3, this.yPos + 40, this.xPos + 8, this.yPos + 40);
+                this.word.bezierCurveTo(this.xPos + 14, this.yPos + 40, this.xPos + 17, this.yPos + 37, this.xPos + 17, this.yPos + 30);
+                this.word.lineTo(this.xPos + 17, this.yPos + 0);
+            },
+            v() {
+                this.word.moveTo(this.xPos + 0, this.yPos + 0)
+                this.word.lineTo(this.xPos + 8, this.yPos + 40)
+                this.word.lineTo(this.xPos + 17, this.yPos + 0)
+            },
+            w() {
+                this.word.moveTo(this.xPos + 0, this.yPos + 0)
+                this.word.lineTo(this.xPos + 0, this.yPos + 40)
+                this.word.lineTo(this.xPos + 8, this.yPos + 20)
+                this.word.lineTo(this.xPos + 17, this.yPos + 40)
+                this.word.lineTo(this.xPos + 17, this.yPos + 0)
+            },
+            x() {
+                this.word.moveTo(this.xPos + 0, this.yPos + 0)
+                this.word.lineTo(this.xPos + 19, this.yPos + 40)
+                this.word.moveTo(this.xPos + 19, this.yPos + 0)
+                this.word.lineTo(this.xPos + 0, this.yPos + 40)
+            },
+            y() {
+                this.word.moveTo(this.xPos + -1, this.yPos + 0);
+                this.word.lineTo(this.xPos + 10, this.yPos + 20);
+                this.word.lineTo(this.xPos + 21, this.yPos + 0);
+                this.word.moveTo(this.xPos + 10, this.yPos + 20);
+                this.word.lineTo(this.xPos + 10, this.yPos + 40);
+            },
+            z() {
+                this.word.moveTo(this.xPos + 0, this.yPos + 0)
+                this.word.lineTo(this.xPos + 17, this.yPos + 0)
+                this.word.lineTo(this.xPos + 0, this.yPos + 40)
+                this.word.lineTo(this.xPos + 17, this.yPos + 40)
+            }
+            //letters are 50 tall and 40 wide
+            // a() {
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 50)
+            //     this.word.lineTo(this.xPos + 20, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 40, this.yPos + 50)
+            //     this.word.moveTo(this.xPos + 10, this.yPos + 25)
+            //     this.word.lineTo(this.xPos + 30, this.yPos + 25)
+            // },
+            // b() {
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 50)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 37)
+            //     this.word.lineTo(this.xPos + 10, this.yPos + 25)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 12)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 0)
+            // },
+            // c() {
+            //     this.word.moveTo(this.xPos + 35, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 50)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 50)
+            // },
+            // d() {
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 50)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 25)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 0)
+            // },
+            // e() {
+            //     this.word.moveTo(this.xPos + 35, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 25)
+            //     this.word.lineTo(this.xPos + 25, this.yPos + 25)
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 25)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 50)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 50)
+            // },
+            // f() {
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 50)
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 0)
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 25)
+            //     this.word.lineTo(this.xPos + 27, this.yPos + 25)
+            // },
+            // g() {
+            //     this.word.moveTo(this.xPos + 35, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 50)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 50)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 25)
+            //     this.word.lineTo(this.xPos + 20, this.yPos + 25)
+            // },
+            // h() {
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 50)
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 25)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 25)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 50)
+            //     this.word.moveTo(this.xPos + 35, this.yPos + 25)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 0)
+            // },
+            // i() {
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 0)
+            //     this.word.moveTo(this.xPos + 17, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 17, this.yPos + 50)
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 50)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 50)
+            // },
+            // j() {
+            //     this.word.moveTo(this.xPos + 34, this.yPos + 0);
+            //     this.word.lineTo(this.xPos + 34, this.yPos + 50);
+            //     this.word.lineTo(this.xPos + 3, this.yPos + 50);
+            //     this.word.lineTo(this.xPos + 3, this.yPos + 37);
+            // },
+            // k() {
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 50)
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 25)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 0)
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 25)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 50)
+            // },
+            // l() {
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 50)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 50)
+            // },
+            // m() {
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 50)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 18, this.yPos + 25)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 50)
+            // },
+            // n() {
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 50)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 50)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 0)
+            // },
+            // o() {
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 15)
+            //     this.word.lineTo(this.xPos + 18, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 15)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 35)
+            //     this.word.lineTo(this.xPos + 18, this.yPos + 50)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 35)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 15)
+            // },
+            // p() {
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 50)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 25)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 25)
+            // },
+            // q() {
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 15)
+            //     this.word.lineTo(this.xPos + 18, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 15)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 35)
+            //     this.word.lineTo(this.xPos + 18, this.yPos + 50)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 35)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 15)
+            //     this.word.moveTo(this.xPos + 20, this.yPos + 30)
+            //     this.word.lineTo(this.xPos + 40, this.yPos + 50)
+            // },
+            // r() {
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 50)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 30, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 30, this.yPos + 25)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 25)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 50)
+            // },
+            // s() {
+            //     this.word.moveTo(this.xPos + 35, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 25)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 25)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 50)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 50)
+            // },
+            // t() {
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 40, this.yPos + 0)
+            //     this.word.moveTo(this.xPos + 20, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 20, this.yPos + 50)
+            // },
+            // u() {
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 50)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 50)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 0)
+            // },
+            // v() {
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 17, this.yPos + 50)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 0)
+            // },
+            // w() {
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 50)
+            //     this.word.lineTo(this.xPos + 20, this.yPos + 25)
+            //     this.word.lineTo(this.xPos + 40, this.yPos + 50)
+            //     this.word.lineTo(this.xPos + 40, this.yPos + 0)
+            // },
+            // x() {
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 50)
+            //     this.word.moveTo(this.xPos + 35, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 50)
+            // },
+            // y() {
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 0);
+            //     this.word.lineTo(this.xPos + 20, this.yPos + 25);
+            //     this.word.lineTo(this.xPos + 40, this.yPos + 0);
+            //     this.word.moveTo(this.xPos + 20, this.yPos + 25);
+            //     this.word.lineTo(this.xPos + 20, this.yPos + 50);
+            // },
+            // z() {
+            //     this.word.moveTo(this.xPos + 0, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 0)
+            //     this.word.lineTo(this.xPos + 0, this.yPos + 50)
+            //     this.word.lineTo(this.xPos + 35, this.yPos + 50)
+            // }
         }
     },
     checkLineIntersection(v1, v1End, v2, v2End) {
@@ -2100,6 +2477,7 @@ const simulation = {
         }
     },
     enableConstructMode() {
+        tech.giveTech('motion sickness') //for precise mouse control
         level.isProcedural = false //this is set to be true in levels like labs that need x+ and y+ in front of positions
         level.isVerticalFLipLevel = false
         simulation.isConstructionMode = true;

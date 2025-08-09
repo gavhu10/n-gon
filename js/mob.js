@@ -279,16 +279,33 @@ const mobs = {
                 ctx.stroke()
             },
             healthBar4() {
-                const h = this.radius * 0.36;
-                const w = this.radius * 2;
-                const x = this.position.x - w / 2;
-                const y = this.position.y - w * 0.7;
-                ctx.fillStyle = "rgba(100, 100, 100, 0.3)";
-                ctx.fillRect(x, y, w, h);
-                ctx.fillStyle = "#000";
-                for (let j = 0; j < 5; j++) {
-                    if (this.health > j * 0.2) {
-                        ctx.fillRect(x + (j * 0.41) * this.radius, y, h, h);
+                if (this.health > 0.5) {
+                    const h = this.radius * 0.36;
+                    const w = this.radius * 2;
+                    const x = this.position.x - w / 2;
+                    const y = this.position.y - w * 0.7;
+                    ctx.fillStyle = "rgba(100, 100, 100, 0.3)";
+                    ctx.fillRect(x, y, w, h);
+                    ctx.fillStyle = "#000";
+                    const health = 2 * (this.health - 0.5)
+                    for (let j = 0; j < 5; j++) {
+                        if (health > j * 0.2) {
+                            ctx.fillRect(x + (j * 0.41) * this.radius, y, h, h);
+                        }
+                    }
+                } else {
+                    const h = this.radius * 0.36;
+                    const w = this.radius * 2;
+                    const x = this.position.x - w / 2;
+                    const y = this.position.y - w * 0.7;
+                    ctx.fillStyle = "rgba(100, 100, 100, 0.3)";
+                    ctx.fillRect(x, y, w, h);
+                    ctx.fillStyle = "#fff";
+                    const health = 2 * this.health
+                    for (let j = 0; j < 5; j++) {
+                        if (health > j * 0.2) {
+                            ctx.fillRect(x + (j * 0.41) * this.radius, y, h, h);
+                        }
                     }
                 }
             },
@@ -361,7 +378,7 @@ const mobs = {
                         this.lostPlayer();
                         if (!m.isCloak) {
                             for (let i = 0; i < depth; i++) { //if lost player lock onto a player location in history
-                                let history = m.history[(m.cycle - 10 * i) % 600]
+                                let history = m.history[(simulation.cycle - 10 * i) % 600]
                                 if (Matter.Query.ray(map, this.position, history.position).length === 0) {
                                     this.seePlayer.recall = this.memory + Math.round(this.memory * Math.random()); //cycles before mob falls a sleep
                                     this.seePlayer.position.x = history.position.x;
@@ -1117,7 +1134,7 @@ const mobs = {
                             });
                         }
                     }
-                    if (level.isMobRespawn && !this.isBoss && 0.33 > Math.random()) {
+                    if (level.isMobRespawn && !this.isBoss && 0.25 > Math.random()) {
                         simulation.drawList.push({
                             x: this.position.x,
                             y: this.position.y,
@@ -1140,10 +1157,7 @@ const mobs = {
                             time: 60
                         });
                         setTimeout(() => {
-                            // const pick = spawn.pickList[Math.floor(Math.random() * spawn.pickList.length)];
-                            // const size = 16 + Math.ceil(Math.random() * 15)
-                            // spawn[pick](this.position.x, this.position.y, size);
-                            spawn.randomMobByLevelsCleared(2650, -975);
+                            spawn.randomMobByLevelsCleared(this.position.x, this.position.y);
                         }, 1000);
                     }
                     if (tech.healSpawn && Math.random() < tech.healSpawn) {
