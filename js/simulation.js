@@ -113,11 +113,20 @@ const simulation = {
         simulation.isTimeSkipping = false;
     },
     ephemera: [], //array that is used to store ephemera objects
-    removeEphemera: function (name) {
-        for (let i = 0, len = simulation.ephemera.length; i < len; i++) {
-            if (simulation.ephemera[i].name === name) {
-                simulation.ephemera.splice(i, 1);
-                break;
+    removeEphemera: function (who, isRemoveByName) {
+        if (isRemoveByName) { //who is a string
+            for (let i = 0, len = simulation.ephemera.length; i < len; i++) {
+                if (simulation.ephemera[i].name === who) {
+                    simulation.ephemera.splice(i, 1);
+                    break;
+                }
+            }
+        } else {
+            for (let i = 0, len = simulation.ephemera.length; i < len; i++) {
+                if (simulation.ephemera[i] === who) {
+                    simulation.ephemera.splice(i, 1);
+                    break;
+                }
             }
         }
     },
@@ -415,32 +424,6 @@ const simulation = {
         }
         simulation.boldActiveGunHUD();
     },
-    // updateTechHUD() {
-    //     let text = ""
-    //     for (let i = 0, len = tech.tech.length; i < len; i++) { //add tech
-    //         if (tech.tech[i].isLost) {
-    //             if (text) text += "<br>" //add a new line, but not on the first line
-    //             text += `<span style="text-decoration: line-through;">${tech.tech[i].name}</span>`
-    //         } else if (tech.tech[i].count > 0 && !tech.tech[i].isInstant) {
-    //             if (text) text += "<br>" //add a new line, but not on the first line
-    //             text += `<span id = "${tech.tech[i].name}">${tech.tech[i].name}${tech.tech[i].count > 1 ? ` (${tech.tech[i].count}x)` : ""}</span>`
-
-    //             // document.getElementById(tech.tech[i].name).style.fontWeight = 'bold';
-    //             // simulation.ephemera.push({
-    //             //     name: "bold",
-    //             //     count: 180,
-    //             //     do() {
-    //             //         this.count--
-    //             //         if (this.count < 0) {
-    //             //             simulation.removeEphemera(this.name)
-    //             //             if (document.getElementById(tech.tech[i].name)) document.getElementById(tech.tech[i].name).style.fontWeight = 'normal';
-    //             //         }
-    //             //     }
-    //             // })
-    //         }
-    //     }
-    //     document.getElementById("right-HUD").innerHTML = text
-    // },
     updateTechHUD() {
         let text = ""
         for (let i = 0, len = tech.tech.length; i < len; i++) { //add tech
@@ -559,7 +542,7 @@ const simulation = {
                     simulation.zoomScale += step
                     if (this.count < 1 && this.currentLevel === level.onLevel && simulation.isAutoZoom) {
                         simulation.zoomScale = newZoomScale
-                        simulation.removeEphemera(this.name)
+                        simulation.removeEphemera(this)
                     }
                     simulation.setZoom(simulation.zoomScale);
                 },
@@ -805,8 +788,8 @@ const simulation = {
     firstRun: true,
     splashReturn() {
         if (document.fullscreenElement) {
-            mouseMove.isLockPointer = true
-            document.body.addEventListener('mousedown', mouseMove.pointerUnlock);//watches for mouse clicks that exit draft mode and self removes
+            // mouseMove.isLockPointer = true
+            document.body.addEventListener('mousedown', mouseMove.pointerUnlock, { once: true })//watches for mouse clicks that exit draft mode and self removes
 
             document.exitPointerLock();
             mouseMove.isPointerLocked = false
@@ -818,7 +801,7 @@ const simulation = {
         //String(document.getElementById("seed").value)
         // Math.seed = Math.abs(Math.hash(Math.initialSeed)) //update randomizer seed in case the player changed it
 
-
+        canvas.style.filter = "brightness(1)"
         simulation.clearTimeouts();
         simulation.onTitlePage = true;
         document.getElementById("splash").onclick = function () {
@@ -984,10 +967,11 @@ const simulation = {
 
         //set to default field
         tech.healMaxEnergyBonus = 0
-        m.energy = 0
         m.immuneCycle = 0;
         m.coupling = 0
+        m.fieldUpgrades[1].energyHealthRatio = 1
         m.setField(0) //this calls m.couplingChange(), which sets max health and max energy
+        m.energy = 1
         //exit testing
         if (simulation.testing) {
             simulation.testing = false;
@@ -999,7 +983,7 @@ const simulation = {
         build.hasExperimentalMode = false
         build.isExperimentSelection = false;
         build.isExperimentRun = false;
-
+        canvas.style.filter = "brightness(1)"
 
         //setup checks
         if (!localSettings.isHideHUD) {
@@ -1021,7 +1005,7 @@ const simulation = {
             })
         }
         simulation.ephemera.push({
-            name: "uniqueName", count: 0, do() {
+            name: "checks", count: 0, do() {
                 if (!(m.cycle % 60)) { //once a second
                     //energy overfill 
                     if (m.energy > m.maxEnergy) {
@@ -1033,11 +1017,10 @@ const simulation = {
                             //infinite falling.  teleport to sky after falling
 
                             simulation.ephemera.push({
-                                name: "slow player",
                                 count: 160, //cycles before it self removes
                                 do() {
                                     this.count--
-                                    if (this.count < 0 || m.onGround) simulation.removeEphemera(this.name)
+                                    if (this.count < 0 || m.onGround) simulation.removeEphemera(this)
                                     if (player.velocity.y > 70) Matter.Body.setVelocity(player, { x: player.velocity.x * 0.99, y: player.velocity.y * 0.99 });
                                     if (player.velocity.y > 90) Matter.Body.setVelocity(player, { x: player.velocity.x * 0.99, y: player.velocity.y * 0.99 });
                                 },
@@ -1060,11 +1043,10 @@ const simulation = {
                             }
                         } else if (level.fallMode === "position") { //fall and stay in the same horizontal position
                             simulation.ephemera.push({
-                                name: "slow player",
                                 count: 180, //cycles before it self removes
                                 do() {
                                     this.count--
-                                    if (this.count < 0 || m.onGround) simulation.removeEphemera(this.name)
+                                    if (this.count < 0 || m.onGround) simulation.removeEphemera(this)
                                     if (player.velocity.y > 70) Matter.Body.setVelocity(player, { x: player.velocity.x * 0.99, y: player.velocity.y * 0.99 });
                                     if (player.velocity.y > 90) Matter.Body.setVelocity(player, { x: player.velocity.x * 0.99, y: player.velocity.y * 0.99 });
                                 },
@@ -1140,19 +1122,18 @@ const simulation = {
                         if (Matter.Query.point(map, m.pos).length > 0 || Matter.Query.point(map, player.position).length > 0) {
                             //check for the next few seconds to see if being stuck continues
                             simulation.ephemera.push({
-                                name: "stuck",
                                 count: 240, //cycles before it self removes
                                 do() {
                                     if (Matter.Query.point(map, m.pos).length > 0 || Matter.Query.point(map, player.position).length > 0) {
                                         this.count--
 
                                         if (this.count < 0) {
-                                            simulation.removeEphemera(this.name)
+                                            simulation.removeEphemera(this)
                                             Matter.Body.setVelocity(player, { x: 0, y: 0 });
                                             Matter.Body.setPosition(player, { x: level.enter.x + 50, y: level.enter.y - 20 });
                                         }
                                     } else {
-                                        simulation.removeEphemera(this.name)
+                                        simulation.removeEphemera(this)
                                     }
                                 },
                             })
@@ -1220,7 +1201,7 @@ const simulation = {
         simulation.fpsInterval = 1000 / simulation.fpsCap;
         simulation.then = Date.now();
         requestAnimationFrame(cycle); //starts game loop
-        if (document.fullscreenElement) mouseMove.isLockPointer = true //this interacts with the mousedown event listener to exit pointer lock
+        // if (document.fullscreenElement) mouseMove.isLockPointer = true //this interacts with the mousedown event listener to exit pointer lock
     },
     clearTimeouts() {
         let id = window.setTimeout(function () { }, 0);
@@ -1530,18 +1511,66 @@ const simulation = {
             best.dist = Math.sqrt(best.dist)
             return best;
         },
+        // getIntersections(v1, v1End, domain) {
+        //     const intersections = [];
+        //     for (const obj of domain) {
+        //         for (var i = 0; i < obj.vertices.length - 1; i++) {
+        //             results = simulation.checkLineIntersection(v1, v1End, obj.vertices[i], obj.vertices[i + 1]);
+        //             if (results.onLine1 && results.onLine2) intersections.push({ x: results.x, y: results.y });
+        //         }
+        //         results = simulation.checkLineIntersection(v1, v1End, obj.vertices[obj.vertices.length - 1], obj.vertices[0]);
+        //         if (results.onLine1 && results.onLine2) intersections.push({ x: results.x, y: results.y });
+        //     }
+        //     return intersections;
+        // },
+
+        // (Only adds an AABB guard + declares `results` with let.)
         getIntersections(v1, v1End, domain) {
+            function segmentsBboxOverlap(p1, p2, q1, q2) {
+                // Bounding box of segment p1-p2
+                const pMinX = p1.x < p2.x ? p1.x : p2.x;
+                const pMaxX = p1.x > p2.x ? p1.x : p2.x;
+                const pMinY = p1.y < p2.y ? p1.y : p2.y;
+                const pMaxY = p1.y > p2.y ? p1.y : p2.y;
+
+                // Bounding box of segment q1-q2
+                const qMinX = q1.x < q2.x ? q1.x : q2.x;
+                const qMaxX = q1.x > q2.x ? q1.x : q2.x;
+                const qMinY = q1.y < q2.y ? q1.y : q2.y;
+                const qMaxY = q1.y > q2.y ? q1.y : q2.y;
+
+                // Boxes must overlap on both axes to possibly intersect
+                return !(pMaxX < qMinX || qMaxX < pMinX || pMaxY < qMinY || qMaxY < pMinY);
+            }
+
             const intersections = [];
+
             for (const obj of domain) {
-                for (var i = 0; i < obj.vertices.length - 1; i++) {
-                    results = simulation.checkLineIntersection(v1, v1End, obj.vertices[i], obj.vertices[i + 1]);
+                // iterate edges [i] -> [i+1]
+                for (let i = 0; i < obj.vertices.length - 1; i++) {
+                    const a = obj.vertices[i];
+                    const b = obj.vertices[i + 1];
+
+                    // Cheap reject: skip if segment bbox doesn't overlap ray bbox
+                    if (!segmentsBboxOverlap(v1, v1End, a, b)) continue;
+
+                    let results = simulation.checkLineIntersection(v1, v1End, a, b);
                     if (results.onLine1 && results.onLine2) intersections.push({ x: results.x, y: results.y });
                 }
-                results = simulation.checkLineIntersection(v1, v1End, obj.vertices[obj.vertices.length - 1], obj.vertices[0]);
-                if (results.onLine1 && results.onLine2) intersections.push({ x: results.x, y: results.y });
+
+                // close the polygon: last -> first
+                const a = obj.vertices[obj.vertices.length - 1];
+                const b = obj.vertices[0];
+
+                if (segmentsBboxOverlap(v1, v1End, a, b)) {
+                    let results = simulation.checkLineIntersection(v1, v1End, a, b);
+                    if (results.onLine1 && results.onLine2) intersections.push({ x: results.x, y: results.y });
+                }
             }
+
             return intersections;
         },
+
         circleLoS(pos, radius) {
             function allCircleLineCollisions(c, radius, domain) {
                 var lines = [];
@@ -1724,74 +1753,7 @@ const simulation = {
         },
     },
     draw: {
-        // powerUp() { //is set by Bayesian tech
-        //     // ctx.globalAlpha = 0.4 * Math.sin(m.cycle * 0.15) + 0.6;
-        //     // for (let i = 0, len = powerUp.length; i < len; ++i) {
-        //     //   ctx.beginPath();
-        //     //   ctx.arc(powerUp[i].position.x, powerUp[i].position.y, powerUp[i].size, 0, 2 * Math.PI);
-        //     //   ctx.fillStyle = powerUp[i].color;
-        //     //   ctx.fill();
-        //     // }
-        //     // ctx.globalAlpha = 1;
-        // },
-        // powerUpNormal() { //back up in case power up draw gets changed
-        //     ctx.globalAlpha = 0.4 * Math.sin(m.cycle * 0.15) + 0.6;
-        //     for (let i = 0, len = powerUp.length; i < len; ++i) {
-        //         ctx.beginPath();
-        //         ctx.arc(powerUp[i].position.x, powerUp[i].position.y, powerUp[i].size, 0, 2 * Math.PI);
-        //         ctx.fillStyle = powerUp[i].color;
-        //         ctx.fill();
-        //     }
-        //     ctx.globalAlpha = 1;
-        // },
-        // powerUpBonus() { //draws crackle effect for bonus power ups
-        //     ctx.globalAlpha = 0.4 * Math.sin(m.cycle * 0.15) + 0.6;
-        //     for (let i = 0, len = powerUp.length; i < len; ++i) {
-        //         ctx.beginPath();
-        //         ctx.arc(powerUp[i].position.x, powerUp[i].position.y, powerUp[i].size, 0, 2 * Math.PI);
-        //         ctx.fillStyle = powerUp[i].color;
-        //         ctx.fill();
-        //     }
-        //     ctx.globalAlpha = 1;
-        //     for (let i = 0, len = powerUp.length; i < len; ++i) {
-        //         if (powerUp[i].isDuplicated && Math.random() < 0.1) {
-        //             //draw electricity
-        //             const mag = 5 + powerUp[i].size / 5
-        //             let unit = Vector.rotate({
-        //                 x: mag,
-        //                 y: mag
-        //             }, 2 * Math.PI * Math.random())
-        //             let path = {
-        //                 x: powerUp[i].position.x + unit.x,
-        //                 y: powerUp[i].position.y + unit.y
-        //             }
-        //             ctx.beginPath();
-        //             ctx.moveTo(path.x, path.y);
-        //             for (let i = 0; i < 6; i++) {
-        //                 unit = Vector.rotate(unit, 3 * (Math.random() - 0.5))
-        //                 path = Vector.add(path, unit)
-        //                 ctx.lineTo(path.x, path.y);
-        //             }
-        //             ctx.lineWidth = 0.5 + 2 * Math.random();
-        //             ctx.strokeStyle = "#000"
-        //             ctx.stroke();
-        //         }
-        //     }
-        // },
 
-        // map: function() {
-        //     ctx.beginPath();
-        //     for (let i = 0, len = map.length; i < len; ++i) {
-        //         let vertices = map[i].vertices;
-        //         ctx.moveTo(vertices[0].x, vertices[0].y);
-        //         for (let j = 1; j < vertices.length; j += 1) {
-        //             ctx.lineTo(vertices[j].x, vertices[j].y);
-        //         }
-        //         ctx.lineTo(vertices[0].x, vertices[0].y);
-        //     }
-        //     ctx.fillStyle = "#444";
-        //     ctx.fill();
-        // },
         mapPath: null, //holds the path for the map to speed up drawing
         setPaths() {
             //runs at each new level to store the path for the map since the map doesn't change

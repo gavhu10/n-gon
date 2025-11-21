@@ -1,38 +1,59 @@
 ******************************************************** NEXT PATCH **************************************************
 
-announcing level name and constraints using in-level text
+new bosses:
+  spiderBoss2
+  spiderBoss3
+  spiderBoss4
+  tendrilBoss
+  tendrilBoss3
+  hydraBoss
+  hydraBoss2
+  hydraBoss3
 
-von Neumann probe, ablative drones are included in endothermic's effects
-maul and rebar use 10->30 ammo
-tech reduced tolerances renamed standardization
-trainBoss is now slow near player and fast otherwise
-opened up reversed version of corridor level
+new constraint - hallucinations
 
-bugs
-  removed excessive console messages from anyon
-  activated hoizontally flipped mode on corridor level
-  fixed issue with localSettings.isHideHUD disabling constraint state settings with pause menu
+pair production will advance time 0.3s after picking up power ups
+foam recoil is reduce while standing on the ground or crouching
+when you have accretion, heals will now go to the next level even if they aren't nearby
+clarified counterfactual conditional text
+mob wings push 30% less and do 30% less damage
+pyrotechnics grenades explode about 0.05 seconds slower and a 1 fewer explosion
+
+bug fixes
+  adjusted interest wording to match 6% coupling spawn
+  assignment to const var on laserTargetingBoss
 
 *********************************************************** TODO *****************************************************
 
-T3, T4 (mostly T4)
-  reduce mob CD and move speed
-  reduce number of mob bulelts
-  increase damage taken
+
+tech: advance time 1 second after eating a power up
+  skin tech Verlet integration unlocks
+
+
+drain energy when the block you hold hits a mob
+  set held block to collide with mob and mob bullets
+  in player code check for collisions between block and mobs
+
+performance issue with experiment mode
+  causes my computer fan to turn on when I leave it on for a few minutes
+    maybe do a performance test in dev tools
+  fixes?
+    remove some CSS animations
+      cloaking
+      choices
+    find a way to not draw things off screen?
+    something might be changing size and forcing a redraw of everything
 
 perfect diamagnetism tech:   - using field while crouching will pull in blocks
   releasing field will fire the blocks  (like control)
   very strong, but high energy cost
-
-tech -  gain 5% duplication each time you expend a research orb
 
 gun tech upgrade that rewards pressing fire with a precise rhythm
   press fire every 2-3 seconds and each time you get a "perfect" rhythm
     gain 1.5x damage for that gun, but lose the bonus if you miss the timing
     refund ammo cost for each perfect
   gun:
-    shotgun?
-    super balls?
+    shotgun: time it so you press fire right after CD ends
   need to draw an on screen animation to help with timing
 
 persistent effects: effects that carry over to your next game: "for the next 3 runs of n-gon"
@@ -65,9 +86,6 @@ challenges
     leave a boss alive
     leave __ power ups
 
-see if LLM can improve the performance of
-  line of sight code?
-
 new boss - murmuration of small mobs (maybe 30-50)
   first mob of this type in mob array controls the others
     commands
@@ -76,19 +94,12 @@ new boss - murmuration of small mobs (maybe 30-50)
         if one mob can't see goal have them target other mobs in the murmuration
     if no more mobs left on death spawn power ups
 
-letters - not sure how to actually use them...
-  !training levels
-    write out current objective on level background
-    since it can only make letters in alphabet, all instructions would need to be customized
-    maybe just a message on the first training level telling them to look in the console
+diagetic letters
   initial
     !added instructions for inputs
       maybe only if new player...
     !let player know what lore chapter they are on
       especially pacifist chapter
-  !run ephemera for 6 seconds with name of each level written somewhere on map
-    not sure this is a good idea, maybe do it very fast
-    display directly below level entrance
 
 tech, field? base game? - doing damage heals 1x (less?) of the last damage taken
   so you can't heal if you take damage twice before doing enough damage
@@ -118,12 +129,6 @@ tech:   -  set max energy equal to max health
     stress–energy tensor
     nuclear pasta
     Lagrangian
-
-missile tech - missiles explode when they hit walls
-  missiles explode a second time, 30 cycles later
-    second explosion isn't in the same spot.
-      it follows the missile?  if possible
-      it targets mobs that got hit by the first explosions?
 
 tech:   - make a few random types of special bullets for super balls
   super ball type ideas:
@@ -156,6 +161,7 @@ tech:  - repeat all _____ effects a second time
   on remove/eject tech
   on mob death
   on getting hit
+  hard to balance this...
 
 wormhole tech:  - random bullets fire from both wormholes
   fire b.needle() for 3 seconds after making a new wormhole
@@ -205,9 +211,6 @@ tech:  - nonrefundable tech that gives you 2 tech that each have minor negative 
   positive effects
     benefit after removing the negative tech
 
-mob that does very fast tiny little hops, like a little bunny
-  it has extra gravity so it can jump faster
-
 field tech: - use _____ to refresh current choices  (or give +6 choices for the next 3 tech)
   which field? (pick one based on the name)
     pilot wave (choices)
@@ -220,11 +223,11 @@ field tech: - use _____ to refresh current choices  (or give +6 choices for the 
       produce a new choice for each 30 energy
 
 mob status: confused - I could rotate the velocity that mobs have gently over 1-2 seconds. that might work.
-
-JUNK: Tracepath (literally traces M's path for a bit, sort of like snakeBoss)
+  probably also want to add a force so effects are noticable for stationary mobs
+  problem is that mobs all have different airFriction
 
 constraint: remove 10% of your tech until the end of the level
-  does remove then add give any benefits?
+  does remove then add give any benefits, or lasting effects?
 
 mob: weeping angle - spawns long lasting bullets, like seekers, but called weepers
   tier 3
@@ -250,9 +253,6 @@ mob: weepers - bullet
 guntech:  - 0.5x damage taken while ____  gun is equipped
   wave or shotgun?
   thematic issues? (how is a gun going to protect you)
-
-missiles that start slow but accelerate until hypersonic
-  maybe just add this to another missile tech to make it less boring
 
 make guns do different things if  tap or hold fire
   effects have some overlap with crouch
@@ -280,7 +280,7 @@ tech - if you haven't fired a bullet in 4 seconds your next bullet is bigger?
 option for numerical HUD
   dmg, energy, health, defense
 
-hold jump to jump higher
+hold jump to jump much higher
   field tech?  or skin tech?
     maybe require nitinol first?
 
@@ -414,22 +414,8 @@ after picking up research gain ____
 tech: Energy generation increases with you velocity
   Newtons' 3rd law?
 
-tech - getting caught in an explosion gives you _____
-  damage for 10 seconds?
-  heals
-
 explosions have a chance to spawn spores
   infinite feedback loop with spores that explode?
-
-tech - getting a new gun also gives you 2 random tech for that gun
-  or a field?
-  can these guntech tech be converted into a player choice?
-
-how to reduce the number of clicks and keypresses
-  auto fire mode
-    player shoots at whatever is nearby
-      should player have to look towards mobs?
-      increase ammo?
 
 animate egg laying mobs
   just draw a circle when it happens?
@@ -502,13 +488,6 @@ make grappling hook of different shapes
     swarf, reel, tokamak
   do this in draw or in verticies?
     draw can have different colors 
-
-player got stuck inside block that wasn't pick up able
-
-tech - killing a mob heals for the last damage you took
-  disable cloaking heal?  maybe you don't need to disable, just don't heal twice
-  heal for 50%?
-  heal from mob damage or from kills?
 
 on sucker mob death trigger radiation damage AoE and a graphic  (Hawking radiation)
 
@@ -701,8 +680,6 @@ tech: get sent to a new tab that closes in 3 minutes
   give player equipment like many-worlds
     count guns, field, tech and give random stuff on new tab
   i-frame instead of tab?
-
-tech: missiles explode a 2nd time after 1/2 a second (with a slightly different position determined by original velocity)
 
 seed isn't working right from shared URL
 
@@ -1380,12 +1357,11 @@ Zapsplat Game Developer Sounds | Download FREE Game Developer sound effects | Za
 
 ******************************************************** IMAGES ********************************************************
 
-process:  discord midjourney prompts -> "pixelmator pro" adjust color, repair, scale to 384x256, export PNG -> webP? -> place in /img folder
-make n-gon a progressive web app to manage image downloads, cache
-wave function collapse opens the pause menu after it triggers alternate reality
-  this is actually good, maybe reuse this code to get pause menu to open at any time
-if pause is pressed while selecting power ups, display pause menu on top of selection menu
+process:  "pixelmator pro" adjust color, repair, adjust size ratio to 3:2, scale to 384x256, export PNG -> webP? -> place in /img folder
+make n-gon a progressive web app to manage image downloads, cache?
 ***styles***
+  player robot -- generate an image of a clean white robot spherical turret on bird legs in a test chamber
+    this worked very well on gemini nano banana
   try --- Pastel drawing, Psychedelic art, Arabesque (cool patterns), knolling (everything spread out and placed on a flat mat)
   try taking screen shots of fields graphics and feeding them into midJourney V4
   technology stuff --- Dan Matutina (cute complex technology),
@@ -1535,19 +1511,16 @@ possible names for tech
   Navier–Stokes - equations for the movement of fluids
 
 
-******************************************************** BUGS ********************************************************
+******************************************************** UNSOLVED BUGS ********************************************************
 
-still getting some hidden mouse on fullscreen when drafting,
-  seems to occur when the game is slow
-    or maybe it occurs when the game pauses wen player takes damage?
-hides mouse when -> (eternalism or no pause) + fullscreen + show AI images
-  this was still broken in previous patch, probably never worked
-  maybe just disable eternalism / no pause if in fullscreen mode and AI images
-  maybe just disable eternalism / no pause always
-
+  !pilot wave always on + power ups in stasis caused a game crash, stuck in paused
+    also was in fullscreen
+    !can't reproduce crash
+    maybe add try to put a delay on pilot wave collecting power ups at start of level
 
 double bots on start of level
-  towers, flocculation, highrise
+  towers, flocculation, highrise, aerie
+  not levelFliped
   occured with only the base bot tech: sound-bot  giving 2x sound-bot, then back to 1 on next level
   occured again on skyscrappers with 2x laser-bots, but should only be one
     https://landgreen.github.io/n-gon/index.html?&seed=88132&gun0=drones&gun1=mine&tech0=quenching&tech1=sentry&tech2=energy%20conservation&tech3=boom-bot&tech4=gauge&tech5=nail-bot&tech6=enthalpy&molMode=0&field=metamaterial%20cloaking&difficulty=6
@@ -1590,10 +1563,10 @@ add more randomize sub level map content
 
 list of powerful synergies
   CPT + high energy regen
-  research + bot fabrication + ersatz bots + various bot upgrades
+  research + Peer Review + bot fabrication + ersatz bots + various bot upgrades
   harpoon + high fire rate + alternator + time dilation
-  duplication 100%
-  interest + coupling, research + (peer review? or Bayesian statistics)
   electronegativity and high energy?
     electronegativity + anyon + duplication + Maxwells demon + interest + pair production
-  chain reaction + invulnerable + Abelian group + parasitism = clear all mobs on level
+  chain reaction + invulnerable + Abelian group = clear all mobs on level
+  Wormhole + manifold + that one upgrade that makes wormholes super cheap on energy + that one upgrade that makes them stop time
+  Unified Field Theory+Lots of duplication tech (and wormhole)+Inductive Charging+Energy Conservation+Virtual Particles+Residual Dipolar Coating

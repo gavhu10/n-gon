@@ -150,7 +150,7 @@ function beforeUnloadEventListener(event) {
     if (tech.isExitPrompt) {
         m.damageDone *= 1.25
         // simulation.inGameConsole(`<strong class='color-d'>damage</strong> <span class='color-symbol'>*=</span> ${1.25}`)
-        simulation.inGameConsole(`<span class='color-var'>tech</span>.damage *= ${1.25} //beforeunload`);
+        simulation.inGameConsole(`<span class='color-var'>tech</span>.<strong class='color-d'>damage</strong> *= ${1.25} //beforeunload`);
         if (Math.random() < 0.25) {
             removeEventListener('beforeunload', beforeUnloadEventListener);
         }
@@ -425,7 +425,7 @@ const build = {
         if (localSettings.isAllowed) localStorage.setItem("localSettings", JSON.stringify(localSettings)); //update local storage
         document.getElementById("hide-hud").checked = localSettings.isHideHUD
         document.getElementById("hide-hud").classList.toggle("ticked")
-        simulation.removeEphemera("dmgDefBars")
+        simulation.removeEphemera("dmgDefBars", true)
         if (!localSettings.isHideHUD) {
             simulation.ephemera.push({
                 name: "dmgDefBars", count: 0, do() {
@@ -537,7 +537,7 @@ ${simulation.isCheating ? "<br><br><em>lore disabled</em>" : ""}
         ${simulation.difficultyMode > 0 ? `<div class="pause-difficulty-row">spawn higher <strong class="color-tier">TIER</strong> mobs<br>after every <strong>4</strong> levels</div>` : " "}
         ${simulation.difficultyMode > 1 ? `<div class="pause-difficulty-row"><strong>0.5x</strong> <strong class='color-d'>damage</strong><br><strong>2x</strong> <strong class='color-defense'>damage taken</strong></div>` : " "}
         ${simulation.difficultyMode > 2 ? `<div class="pause-difficulty-row">spawn a <strong>2nd boss</strong><br>bosses spawn <strong>fewer</strong> ${powerUps.orb.tech()}</div>` : " "}
-        ${simulation.difficultyMode > 3 ? `<div class="pause-difficulty-row">one mob per level will<br>be from <strong>2</strong> <strong class="color-tier">TIER</strong> higher</div>` : " "}
+        ${simulation.difficultyMode > 3 ? `<div class="pause-difficulty-row">increase mob <strong class="color-tier">TIER</strong><br>after every <strong>3</strong> levels</div>` : " "}
         ${simulation.difficultyMode > 4 ? `<div class="pause-difficulty-row"><strong>+1</strong> random <strong class="constraint">constraint</strong><br>fewer initial <strong>power ups</strong></div>` : " "}
         ${simulation.difficultyMode > 5 ? `<div class="pause-difficulty-row"><strong>0.5x</strong> <strong class='color-d'>damage</strong><br><strong>2x</strong> <strong class='color-defense'>damage taken</strong></div>` : " "}
         ${simulation.difficultyMode > 6 ? `<div class="pause-difficulty-row"><strong>+1</strong> random <strong class="constraint">constraint</strong><br>fewer ${powerUps.orb.tech()} spawn</div>` : " "}
@@ -549,7 +549,7 @@ ${simulation.difficultyMode > 4 ? `<details id="constraints-details" style="padd
 <details id = "console-log-details" style="padding: 0 8px;">
 <summary>console log</summary>
 <div class="pause-details">
-    <div class="pause-grid-module" style="    background-color: #e2e9ec;font-size: 0.8em;">${document.getElementById("text-log").innerHTML}</div>
+    <div class="pause-grid-module" style="background-color: #e2e9ec;font-size: 0.85em; font-family: monospace;">${document.getElementById("text-log").innerHTML}</div>
 </div>
 </details>
 </div>`
@@ -607,11 +607,11 @@ ${simulation.difficultyMode > 4 ? `<details id="constraints-details" style="padd
     <input type="search" id="sort-input" style="width: 8em;font-size: 0.6em;color:#000;" placeholder="sort by" />
     <button onclick="build.sortTech('input')" class='sort-button' style="border-radius: 0em;border: 1.5px #000 solid;font-size: 0.6em;" value="damage">sort</button>
 </div>`;
-        const ejectClass = (tech.isPauseEjectTech && !simulation.isChoosing) ? 'pause-eject' : ''
+        const ejectClass = (tech.isPauseEjectTech && !simulation.isChoosing && m.immuneCycle < m.cycle) ? 'pause-eject' : ''
         for (let i = 0, len = tech.tech.length; i < len; i++) {
             if (tech.tech[i].count > 0) {
                 const style = (localSettings.isHideImages || tech.tech[i].isJunk || tech.tech[i].isLore) ? `style="height:auto;"` : `style = "background-image: url('img/${tech.tech[i].name}.webp');"`
-                const techCountText = tech.tech[i].count > 1 ? `(${tech.tech[i].count}x)` : "";
+                // const techCountText = tech.tech[i].count > 1 ? `(${tech.tech[i].count}x)` : "";
                 if (tech.tech[i].isInstant) {
                     // text += `<div class="pause-grid-module" id ="${i}-pause-tech"  style = "border: 0px; opacity:0.5; font-size: 60%; line-height: 130%; margin: 1px; padding: 6px;"><div class="grid-title">${tech.tech[i].link} ${techCountText}</div>${tech.tech[i].descriptionFunction ? tech.tech[i].descriptionFunction() : tech.tech[i].description}</div></div>`
                 } else if (tech.tech[i].isFieldTech) {
@@ -697,7 +697,6 @@ ${simulation.difficultyMode > 4 ? `<details id="constraints-details" style="padd
         } else if (find === 'have') {
             tech.tech.sort((a, b) => {
                 return (a.allowed() === b.allowed()) ? 0 : a.allowed() ? -1 : 1;
-                return 0;
             });
         } else if (find === 'heal') {
             tech.tech.sort((a, b) => {
@@ -1490,31 +1489,91 @@ window.addEventListener("keydown", function (event) {
         case input.key.fullscreen:
             // Escape key will also automatically exit pointer lock and fullscreen
             // console.log(document.activeElement !== document.getElementById('sort-input'), document.activeElement)
-            if (document.fullscreenElement && document.activeElement !== document.getElementById('sort-input')) {
-                document.exitPointerLock();
-                mouseMove.isPointerLocked = false
-                mouseMove.reset()
-                document.exitFullscreen();
-                input.reset(); //to prevent key ghosting reset all input keys
-            } else if (document.activeElement !== document.getElementById('sort-input') && mouseMove.isMouseInWindow) {
-                document.documentElement.requestFullscreen().then(() => {
+
+
+            // const onFullscreenChange = () => {
+            //     if (document.fullscreenElement) { // Make sure we entered, not exited
+            //         input.reset();
+
+            //         if (!simulation.onTitlePage && !build.isExperimentSelection && !simulation.paused && !simulation.isChoosing) {
+            //             canvas.requestPointerLock();
+            //             mouseMove.isPointerLocked = true;
+            //             mouseMove.reset();
+            //         } else {
+            //             mouseMove.isLockPointer = true;
+            //             document.body.addEventListener('mousedown', mouseMove.pointerUnlock);
+            //         }
+            //     }
+            // };
+
+            // // Add the listener that runs only once.
+            // document.addEventListener('fullscreenchange', onFullscreenChange, { once: true });
+
+            // // Now, request fullscreen.
+            // document.documentElement.requestFullscreen().catch(err => {
+            //     // If the request fails, the 'fullscreenchange' event will never fire,
+            //     // so the listener we added will just be garbage collected. No cleanup needed.
+            //     console.error('Error attempting to enable fullscreen:', err);
+            // });
+
+            if (document.activeElement !== document.getElementById('sort-input')) {//not typing "o" in the sort text menu
+                if (document.fullscreenElement) { //exit fullscreen mode if in fullscreen  
+                    document.exitPointerLock();
+                    mouseMove.isPointerLocked = false
+                    mouseMove.reset()
+                    document.exitFullscreen();
                     input.reset(); //to prevent key ghosting reset all input keys
 
-                    // Small delay to ensure fullscreen is established, then lock pointer to canvas
-                    if (!simulation.onTitlePage && !build.isExperimentSelection && !simulation.paused && !simulation.isChoosing) {
-                        setTimeout(() => {
+
+
+                } else if (mouseMove.isMouseInWindow) { //if mouse is in the window enter fullscreen
+                    document.documentElement.requestFullscreen().then(() => {//wait for fullscreen to be ready
+                        input.reset(); //to prevent key ghosting reset all input keys
+                        //request pointer lock, but not if in a game situation that needs the traditional mouse
+                        if (!simulation.onTitlePage && !build.isExperimentSelection && !simulation.paused && !simulation.isChoosing) {
                             canvas.requestPointerLock();
                             mouseMove.isPointerLocked = true
                             mouseMove.reset()
-                        }, 100);
-                    } else {
-                        mouseMove.isLockPointer = true
-                        document.body.addEventListener('mousedown', mouseMove.pointerUnlock);//watches for mouse clicks that exit draft mode and self removes
-                    }
-                }).catch(err => {
-                    console.error('Error attempting to enable fullscreen:', err);
-                });
+                        } else {
+                            // mouseMove.isLockPointer = true
+                            // document.body.addEventListener('mousedown', mouseMove.pointerUnlock, { once: true });//watches for mouse clicks that exit draft mode and self removes
+                            document.addEventListener('mousedown', mouseMove.pointerUnlock, { once: true })
+                        }
+                    }).catch(err => {
+                        console.error('Error attempting to enable fullscreen:', err);
+                    });
+                }
             }
+
+
+
+
+
+            // if (document.fullscreenElement && document.activeElement !== document.getElementById('sort-input')) {
+            //     document.exitPointerLock();
+            //     mouseMove.isPointerLocked = false
+            //     mouseMove.reset()
+            //     document.exitFullscreen();
+            //     input.reset(); //to prevent key ghosting reset all input keys
+            // } else if (document.activeElement !== document.getElementById('sort-input') && mouseMove.isMouseInWindow) {
+            //     document.documentElement.requestFullscreen().then(() => {
+            //         input.reset(); //to prevent key ghosting reset all input keys
+
+            //         // Small delay to ensure fullscreen is established, then lock pointer to canvas
+            //         if (!simulation.onTitlePage && !build.isExperimentSelection && !simulation.paused && !simulation.isChoosing) {
+            //             setTimeout(() => {
+            //                 canvas.requestPointerLock();
+            //                 mouseMove.isPointerLocked = true
+            //                 mouseMove.reset()
+            //             }, 100);
+            //         } else {
+            //             mouseMove.isLockPointer = true
+            //             document.body.addEventListener('mousedown', mouseMove.pointerUnlock);//watches for mouse clicks that exit draft mode and self removes
+            //         }
+            //     }).catch(err => {
+            //         console.error('Error attempting to enable fullscreen:', err);
+            //     });
+            // }
             break
         case input.key.testing:
             if (m.alive && localSettings.loreCount > 0 && !simulation.paused && !build.isExperimentSelection) {
@@ -1578,7 +1637,7 @@ window.addEventListener("keydown", function (event) {
                 </tr>
                 <tr>
                     <td class='key-input-pause'>–/+</td>
-                    <td class='key-used'>zoom in / out</td>
+                    <td class='key-used'>zoom out / in</td>
                 </tr>
                 <tr>
                     <td class='key-input-pause'>1-8</td>
@@ -1637,13 +1696,13 @@ window.addEventListener("keydown", function (event) {
     if (simulation.testing) {
         if (event.key === "X") m.death(); //only uppercase
         switch (event.key.toLowerCase()) {
-            case "=":
+            case "-":
                 // simulation.isAutoZoom = false;
                 // simulation.zoomScale /= 0.9;
                 // simulation.setZoom();
                 simulation.zoomTransition(simulation.zoomScale / 0.9)
                 break;
-            case "-":
+            case "=":
                 // simulation.isAutoZoom = false;
                 // simulation.zoomScale *= 0.9;
                 // simulation.setZoom();
@@ -1780,22 +1839,22 @@ const mouseMove = {
         if (simulation.mouse.y < 0) simulation.mouse.y = 0
         if (simulation.mouse.y > canvas.height) simulation.mouse.y = canvas.height
     },
-    isLockPointer: false,//use to lock pointer in the mousedown eventlistener
+    // isLockPointer: false,//use to lock pointer in the mousedown eventlistener
     isPointerLocked: false, //tracks the pointer locked state
     isMouseInWindow: true,
     pointerUnlock() { //event
         setTimeout(() => {
-            //simulation.isChoosing
-            if (mouseMove.isLockPointer && document.fullscreenElement && !simulation.onTitlePage && !build.isExperimentSelection && !simulation.paused) {
-                mouseMove.isLockPointer = false
+            if (document.fullscreenElement && !simulation.onTitlePage && !build.isExperimentSelection && !simulation.paused) {
+                // mouseMove.isLockPointer = false
                 canvas.requestPointerLock();
                 mouseMove.isPointerLocked = true
                 mouseMove.reset()
-            } else if (!mouseMove.isLockPointer || !document.fullscreenElement) {
-                mouseMove.isLockPointer = false
             }
-            document.body.removeEventListener('mousedown', mouseMove.pointerUnlock); //remove self so it can't trigger
-        }, 200);
+            // else if (!mouseMove.isLockPointer || !document.fullscreenElement) {
+            //     mouseMove.isLockPointer = false
+            // }
+            // document.body.removeEventListener('mousedown', mouseMove.pointerUnlock); //remove self so it can't trigger
+        }, 100);
     },
     reset() {//sets mouseMove.active based on inverted and pointer lock
         if (simulation.isInvertedVertical) {
@@ -1810,6 +1869,20 @@ const mouseMove = {
                 mouseMove.active = mouseMove.pointerLocked
             } else {
                 mouseMove.active = mouseMove.default
+                // if (true) {
+                //     //show where mouse is
+                //     simulation.ephemera.push({
+                //         count: 30, //cycles before it self removes
+                //         do() {
+                //             this.count--
+                //             if (this.count < 0) simulation.removeEphemera(this)
+                //             ctx.beginPath();
+                //             ctx.arc(simulation.mouse.x, -simulation.mouse.y, 50, 0, 2 * Math.PI);
+                //             ctx.fillStyle = "#f00"
+                //             ctx.fill();
+                //         },
+                //     })
+                // }
             }
         }
     },
@@ -2097,11 +2170,13 @@ document.getElementById("updates").addEventListener("toggle", function () {
             //     text += "<br><em>https://github.com/landgreen/n-gon/</em>: hash does <strong>not</strong> match latest version<br><hr>"
             // }
             for (let i = 0, len = 20; i < len; i++) {
-                text += "<strong>" + data[i].commit.author.date.substr(0, 10) + "</strong> - "; //+ "<br>"
-                text += data[i].commit.message
-                if (i < len - 1) text += "<hr>"
+                if (data[i].commit.message !== "quick bug fix") {
+                    text += "<strong>" + data[i].commit.author.date.substr(0, 10) + "</strong> - "; //+ "<br>"
+                    text += data[i].commit.message
+                    if (i < len - 1) text += "<hr>"
+                }
             }
-            text += "</pre>"
+            text += `</pre><hr><em>complete <a href="https://github.com/landgreen/n-gon/commits/master">change-log</a></em>`
             document.getElementById("updates-div").innerHTML = text.replace(/\n/g, "<br />")
         },
         function (xhr) {
