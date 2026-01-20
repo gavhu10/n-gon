@@ -18,7 +18,7 @@ const simulation = {
         level.custom();
         powerUps.do();
         mobs.draw();
-        simulation.draw.cons();
+        // simulation.draw.cons();
         simulation.draw.body();
         if (!m.isTimeDilated) mobs.loop();
         m.draw();
@@ -204,101 +204,7 @@ const simulation = {
     accelScale: null,
     CDScale: null,
     molecularMode: Math.floor(4 * Math.random()), //0 spores, 1 missile, 2 ice IX, 3 drones //randomize molecular assembler field type
-    // dropFPS(cap = 40, time = 15) {
-    //   simulation.fpsCap = cap
-    //   simulation.fpsInterval = 1000 / simulation.fpsCap;
-    //   simulation.defaultFPSCycle = simulation.cycle + time
-    //   const normalFPS = function () {
-    //     if (simulation.defaultFPSCycle < simulation.cycle) {
-    //       simulation.fpsCap = 72
-    //       simulation.fpsInterval = 1000 / simulation.fpsCap;
-    //     } else {
-    //       requestAnimationFrame(normalFPS);
-    //     }
-    //   };
-    //   requestAnimationFrame(normalFPS);
-    // },
-    // clip() {
 
-    // },
-    pixelGraphics() {
-        //copy current canvas pixel data
-        let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        let data = imgData.data;
-        //change pixel data
-
-
-        // const off = 4 * Math.floor(x) + 4 * canvas.width * Math.floor(y);
-        // multiple windows
-        for (let i = data.length / 2; i < data.length; i += 4) {
-            index = i % (canvas.width * canvas.height * 2) // + canvas.width*4*canvas.height
-
-            data[i + 0] = data[index + 0]; // red
-            data[i + 1] = data[index + 1]; // red
-            data[i + 2] = data[index + 2]; // red
-            data[i + 3] = data[index + 3]; // red
-        }
-
-        for (let x = 0; x < len; x++) {
-
-        }
-
-
-
-        // const startX = 2 * canvas.width + 2 * canvas.width * canvas.height
-        // const endX = 4 * canvas.width + 4 * canvas.width * canvas.height
-        // const startY = 2 * canvas.width + 2 * canvas.width * canvas.height
-        // const endY = 4 * canvas.width + 4 * canvas.width * canvas.height
-        // for (let x = startX; x < endX; x++) {
-        //   for (let y = startY; y < endY; y++) {
-
-        //   }
-        // }
-
-
-
-
-        //strange draw offset
-        // const off = canvas.height * canvas.width * 4 / 2
-        // for (let index = 0; index < data.length; index += 4) {
-        //   data[index + 0] = data[index + 0 + off]; // red
-        //   data[index + 1] = data[index + 1 + off]; // red
-        //   data[index + 2] = data[index + 2 + off]; // red
-        //   data[index + 3] = data[index + 3 + off]; // red
-        // }
-
-        //change all pixels
-        // for (let index = 0; index < data.length; index += 4) {
-        // data[index + 0] = 255; // red
-        // data[index + 1] = 255; // green
-        // data[index + 2] = 255; // blue
-        // data[index + 3] = 255; // alpha 
-        // }
-
-        //change random pixels
-        // for (let i = 0, len = Math.floor(data.length / 10); i < len; ++i) {
-        //   const index = Math.floor((Math.random() * data.length) / 4) * 4;
-        //   data[index + 0] = 255; // red
-        //   data[index + 1] = 0; // green
-        //   data[index + 2] = 0; // blue
-        //   data[index + 3] = 255 //Math.floor(Math.random() * Math.random() * 255); // alpha
-        // }
-
-        // //change random pixels
-        // for (let i = 0, len = Math.floor(data.length / 1000); i < len; ++i) {
-        //   const index = Math.floor((Math.random() * data.length) / 4) * 4;
-        //   // data[index] = data[index] ^ 255; // Invert Red
-        //   // data[index + 1] = data[index + 1] ^ 255; // Invert Green
-        //   // data[index + 2] = data[index + 2] ^ 255; // Invert Blue
-        //   data[index + 0] = 0; // red
-        //   data[index + 1] = 0; // green
-        //   data[index + 2] = 0; // blue
-        //   // data[index + 3] = 255 //Math.floor(Math.random() * Math.random() * 255); // alpha
-        // }
-
-        //draw new pixel data to canvas
-        ctx.putImageData(imgData, 0, 0);
-    },
     drawCursor() {
         const size = 10;
         ctx.beginPath();
@@ -534,13 +440,13 @@ const simulation = {
         if (simulation.isAutoZoom) {
             simulation.ephemera.push({
                 name: "zoom",
-                count: simulation.testing ? 0 : 120, //cycles before it self removes
+                count: simulation.testing ? 1 : 120, //cycles before it self removes
                 currentLevel: level.onLevel,
                 do() {
                     this.count--
                     const step = (newZoomScale - simulation.zoomScale) / this.count
                     simulation.zoomScale += step
-                    if (this.count < 1 && this.currentLevel === level.onLevel && simulation.isAutoZoom) {
+                    if (this.count < 1 && simulation.isAutoZoom) {
                         simulation.zoomScale = newZoomScale
                         simulation.removeEphemera(this)
                     }
@@ -958,6 +864,7 @@ const simulation = {
         m.alive = true;
         m.definePlayerMass();
         m.onGround = false
+        // m.groundCount = 0
         m.lastOnGroundCycle = 0
         m.health = 0;
         level.isLowHeal = false
@@ -1236,9 +1143,15 @@ const simulation = {
             if (tech.isMutualism && !tech.isEnergyHealth) {
                 for (let i = 0; i < bullet.length; i++) {
                     if (bullet[i].isMutualismActive) {
-                        m.health += 0.01 + 0.01 * ((bullet[i].isSpore || bullet[i].isFlea) ? 0 : 1)
-                        if (m.health > m.maxHealth) m.health = m.maxHealth;
-                        m.displayHealth();
+                        if (tech.isMutualism && this.isMutualismActive) {
+                            if (tech.isEnergyHealth) {
+                                m.energy += 0.01 + 0.01 * ((bullet[i].isSpore || bullet[i].isFlea) ? 0 : 1)
+                            } else {
+                                m.health += 0.01 + 0.01 * ((bullet[i].isSpore || bullet[i].isFlea) ? 0 : 1)
+                                if (m.health > m.maxHealth) m.health = m.maxHealth;
+                                m.displayHealth();
+                            }
+                        }
                     }
                 }
             }
@@ -1282,7 +1195,7 @@ const simulation = {
         if (tech.isHealAttract && m.alive) { //send health power ups to the next level
             let healCount = 0
             for (let i = 0, len = powerUp.length; i < len; i++) {
-                if (powerUp[i].name === "heal" && Vector.magnitudeSquared(Vector.sub(powerUp[i].position, m.pos)) < 1000000) healCount++
+                if (powerUp[i].name === "heal") healCount++
             }
             //respawn health in animation frame
             let respawnHeal = () => {
@@ -1303,6 +1216,7 @@ const simulation = {
             let sporeCount = 0
             let wormCount = 0
             let fleaCount = 0
+            // let zombieCount = 0
             for (let i = 0; i < bullet.length; ++i) {
                 if (bullet[i].isDrone && bullet[i].endCycle !== Infinity) {
                     droneArray.push({
@@ -1317,15 +1231,14 @@ const simulation = {
                 } else if (bullet[i].isFlea) {
                     fleaCount++
                 }
+                // else if (bullet[i].isZombie) {
+                //     zombieCount++
+                // }
             }
-
+            const where = { x: level.enter.x + 50, y: level.enter.y - 60 }
             //respawn drones in animation frame
             requestAnimationFrame(() => {
                 let respawnDrones = () => {
-                    const where = {
-                        x: level.enter.x + 50,
-                        y: level.enter.y - 60
-                    }
                     if (droneArray.length) {
                         requestAnimationFrame(respawnDrones);
                         if (!simulation.paused && !simulation.isChoosing && m.alive) {
@@ -1355,14 +1268,7 @@ const simulation = {
                     requestAnimationFrame(respawnSpores);
                     if (!simulation.paused && !simulation.isChoosing) {
                         sporeCount--
-                        const where = {
-                            x: level.enter.x + 50,
-                            y: level.enter.y - 60
-                        }
-                        b.spore({
-                            x: where.x + 100 * (Math.random() - 0.5),
-                            y: where.y + 120 * (Math.random() - 0.5)
-                        })
+                        b.spore({ x: where.x + 100 * (Math.random() - 0.5), y: where.y + 120 * (Math.random() - 0.5) })
                     }
                 }
             }
@@ -1374,14 +1280,7 @@ const simulation = {
                     requestAnimationFrame(respawnWorms);
                     if (!simulation.paused && !simulation.isChoosing) {
                         wormCount--
-                        const where = {
-                            x: level.enter.x + 50,
-                            y: level.enter.y - 60
-                        }
-                        b.worm({
-                            x: where.x + 100 * (Math.random() - 0.5),
-                            y: where.y + 120 * (Math.random() - 0.5)
-                        })
+                        b.worm({ x: where.x + 100 * (Math.random() - 0.5), y: where.y + 120 * (Math.random() - 0.5) })
                     }
                 }
             }
@@ -1393,23 +1292,26 @@ const simulation = {
                     requestAnimationFrame(respawnFleas);
                     if (!simulation.paused && !simulation.isChoosing) {
                         fleaCount--
-                        const where = {
-                            x: level.enter.x + 50,
-                            y: level.enter.y - 60
-                        }
                         const speed = 6 + 3 * Math.random()
                         const angle = 2 * Math.PI * Math.random()
-                        b.flea({
-                            x: where.x + 100 * (Math.random() - 0.5),
-                            y: where.y + 120 * (Math.random() - 0.5)
-                        }, {
-                            x: speed * Math.cos(angle),
-                            y: speed * Math.sin(angle)
-                        })
+                        b.flea({ x: where.x + 100 * (Math.random() - 0.5), y: where.y + 120 * (Math.random() - 0.5) }, { x: speed * Math.cos(angle), y: speed * Math.sin(angle) })
                     }
                 }
             }
             requestAnimationFrame(respawnFleas);
+
+
+            //respawn spores in animation frame
+            // let respawnZombies = () => {
+            //     if (zombieCount > 0) {
+            //         requestAnimationFrame(respawnZombies);
+            //         if (!simulation.paused && !simulation.isChoosing) {
+            //             zombieCount--
+            //             spawn.zombie(where.x + 100 * (Math.random() - 0.5), where.y + 120 * (Math.random() - 0.5))
+            //         }
+            //     }
+            // }
+            // requestAnimationFrame(respawnZombies);
         }
         if (tech.isQuantumEraser && m.alive) {
             let count = 0
@@ -1927,7 +1829,7 @@ const simulation = {
                 ctx.lineTo(bodyDraw[j].x, bodyDraw[j].y);
             }
             ctx.lineTo(bodyDraw[0].x, bodyDraw[0].y);
-            ctx.fillStyle = "rgba(255, 255, 0, 0.4)";
+            ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
             ctx.fill();
             // ctx.stroke();
             //head sensor

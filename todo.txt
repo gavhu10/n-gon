@@ -1,48 +1,82 @@
 ******************************************************** NEXT PATCH **************************************************
 
-new bosses:
-  spiderBoss2
-  spiderBoss3
-  spiderBoss4
-  tendrilBoss
-  tendrilBoss3
-  hydraBoss
-  hydraBoss2
-  hydraBoss3
+removed the option to show images from n-gon
 
-new constraint - hallucinations
-
-pair production will advance time 0.3s after picking up power ups
-foam recoil is reduce while standing on the ground or crouching
-when you have accretion, heals will now go to the next level even if they aren't nearby
-clarified counterfactual conditional text
-mob wings push 30% less and do 30% less damage
-pyrotechnics grenades explode about 0.05 seconds slower and a 1 fewer explosion
+added a growth animation for new power ups
+power ups are uncollectable for about 0.5 seconds after spawning
+wormhole sucks less hard for very close power ups
+first ionization energy renamed ionization energy
+mob mines have a slightly longer delay before exploding
+bremsstrahlung no longer buffs block damage
+long text will no longer spill over to a new line for tech/gun/field descriptions
+  long text will clip when it reaches the edge of the text box
+  some very long text sections were edited to be shorter
+  this should only affect people with unusual fonts/browsers/OS
 
 bug fixes
-  adjusted interest wording to match 6% coupling spawn
-  assignment to const var on laserTargetingBoss
+  molecular assembler coupling
+    fixed a bug where coupling gave 5 instead of 0.5 energy per second
+    buffed 0.5->1 energy per second per coupling
+  harpoon tech wear no longer triggers on invulnerable mobs
+  harpoon tech spalling no longer drops ammo on mob bullets
+  tendrilBoss will now slowly attack when it loses it's arms (instead of just difting away)
 
 *********************************************************** TODO *****************************************************
 
+new level - ducts
+  wind effect
+    push player in a direction
+      push less if on ground or crouching or holding block
+    graphics?
+      draw a line and move it in the direction of wind
+  tunnels with wind
+    change wind direction with button?
+      maybe two buttons that alternate the direction like on the map corridor
+  maybe some spinners that look like fans
 
-tech: advance time 1 second after eating a power up
-  skin tech Verlet integration unlocks
 
+use the horizontal vibration effect on a mob or gun or level effect
+  ctx.translate((simulation.cycle % 2) * 8, 0);
 
-drain energy when the block you hold hits a mob
-  set held block to collide with mob and mob bullets
-  in player code check for collisions between block and mobs
+add a setting to say the name of each tech/field/guns
+  is the built in browser voice good enough accuracy? (yep)
+  when to generate audio?
+    click on the orb while paused?
+    add new icon to click on to the right align of the title
+    after choose (this needs a setting to disable)
+    just make it a JUNK tech?
 
-performance issue with experiment mode
-  causes my computer fan to turn on when I leave it on for a few minutes
-    maybe do a performance test in dev tools
-  fixes?
-    remove some CSS animations
-      cloaking
-      choices
-    find a way to not draw things off screen?
-    something might be changing size and forcing a redraw of everything
+mob attack - crash on top of player when above
+  mob flies towards player, but aims for a space above the player (if there is no map of body elements int the way)
+mob attack - run towards player when in same vertical row
+
+make more Cordyceps/zombie tech?
+  spawn zombie in other ways?
+  tech that buff zombies?
+    zombies move with you to next zone?
+      this is tricky because zombies hurt you when they touch, so where should they spawn?
+      
+show stats for popular tech choices
+  in splash screen?
+  track other stats?
+
+tech: - if player has missile bot and a few other bots
+  convert up to 10 other bots into missile bot
+  convert all your guns into missile bots
+
+constraint ideas
+  0.66x fire rate
+  blocks are converted to mobs
+    similar to blockBoss code
+  no pause while choosing?
+    this was removed because it had issues with full screen
+
+Boltzmann brain
+  do something with a low probability to occur.
+    remove the level and get rid of player legs?
+      convert with ship tech
+    chance to spawn something good?
+  JUNK tech?
 
 perfect diamagnetism tech:   - using field while crouching will pull in blocks
   releasing field will fire the blocks  (like control)
@@ -93,13 +127,6 @@ new boss - murmuration of small mobs (maybe 30-50)
       use seePlayerByHistory to set goal for the murmuration
         if one mob can't see goal have them target other mobs in the murmuration
     if no more mobs left on death spawn power ups
-
-diagetic letters
-  initial
-    !added instructions for inputs
-      maybe only if new player...
-    !let player know what lore chapter they are on
-      especially pacifist chapter
 
 tech, field? base game? - doing damage heals 1x (less?) of the last damage taken
   so you can't heal if you take damage twice before doing enough damage
@@ -1509,6 +1536,8 @@ possible names for tech
   gravity wave - 
   tuple - a finite list
   Navier–Stokes - equations for the movement of fluids
+  renormalization
+
 
 
 ******************************************************** UNSOLVED BUGS ********************************************************

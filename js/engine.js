@@ -23,6 +23,7 @@ function playerOnGroundCheck(event) {
     //runs on collisions events
     function enter() {
         m.numTouching++;
+        // m.groundCount++
         if (!m.onGround) {
             m.onGround = true;
             if (m.crouch) {
@@ -47,7 +48,7 @@ function playerOnGroundCheck(event) {
                 //falling damage
                 if (tech.isFallingDamage && m.immuneCycle < m.cycle && momentum > 150) {
                     // m.takeDamage(Math.min(Math.sqrt(momentum - 100) * 0.02, 0.4) * spawn.dmgToPlayerByLevelsCleared());
-                    m.takeDamage(Math.min(Math.sqrt(momentum - 100) * 0.03, 0.6));
+                    m.takeDamage(Math.min(Math.sqrt(momentum - 100) * 0.04, 0.8));
                     // m.takeDamage(20);
                     if (m.immuneCycle < m.cycle + m.collisionImmuneCycles) m.immuneCycle = m.cycle + m.collisionImmuneCycles; //player is immune to damage for 30 cycles
                 }
@@ -78,6 +79,7 @@ function playerOffGroundCheck(event) {
         if (pairs[i].bodyA === jumpSensor) { //|| pairs[i].bodyB === jumpSensor) {
             if (m.onGround && m.numTouching === 0) {
                 m.onGround = false;
+                // m.groundCount = 0
                 m.lastOnGroundCycle = m.cycle;
                 m.hardLandCD = 0 // disable hard landing
                 if (m.checkHeadClear()) {
@@ -232,21 +234,21 @@ function collisionChecks(event) {
                         if (obj.classType === "body" && obj.speed > 9) {
                             const v = Vector.magnitude(Vector.sub(mob[k].velocity, obj.velocity));
                             if (v > 11) {
-                                if (tech.blockDmg) { //electricity
-                                    Matter.Body.setVelocity(mob[k], { x: 0.5 * mob[k].velocity.x, y: 0.5 * mob[k].velocity.y });
-                                    if (tech.isBlockRadiation && !mob[k].isShielded && !mob[k].isMobBullet) {
-                                        mobs.statusDoT(mob[k], tech.blockDmg * 0.42, 180) //200% increase -> x (1+2) //over 7s -> 360/30 = 12 half seconds -> 3/12
-                                    } else {
-                                        mob[k].damage(tech.blockDmg)
-                                        simulation.drawList.push({
-                                            x: pairs[i].activeContacts[0].vertex.x,
-                                            y: pairs[i].activeContacts[0].vertex.y,
-                                            radius: 28 * mob[k].damageReduction + 3,
-                                            color: "rgba(255,0,255,0.8)",
-                                            time: 4
-                                        });
-                                    }
-                                }
+                                // if (tech.deflectDmg) { //electricity
+                                //     Matter.Body.setVelocity(mob[k], { x: 0.5 * mob[k].velocity.x, y: 0.5 * mob[k].velocity.y });
+                                //     if (tech.isBlockRadiation && !mob[k].isShielded && !mob[k].isMobBullet) {
+                                //         mobs.statusDoT(mob[k], tech.deflectDmg * 0.42, 180) //200% increase -> x (1+2) //over 7s -> 360/30 = 12 half seconds -> 3/12
+                                //     } else {
+                                //         mob[k].damage(tech.deflectDmg)
+                                //         simulation.drawList.push({
+                                //             x: pairs[i].activeContacts[0].vertex.x,
+                                //             y: pairs[i].activeContacts[0].vertex.y,
+                                //             radius: 28 * mob[k].damageReduction + 3,
+                                //             color: "rgba(255,0,255,0.8)",
+                                //             time: 4
+                                //         });
+                                //     }
+                                // }
 
                                 let dmg = tech.blockDamage * v * obj.mass * (tech.isMobBlockFling ? 2.5 : 1) * (tech.isBlockRestitution ? 2.5 : 1) * ((m.fieldMode === 0 || m.fieldMode === 8) ? 1 + 0.05 * m.coupling : 1);
                                 if (mob[k].isShielded) dmg *= 0.7

@@ -560,6 +560,14 @@ const mobs = {
                 }
             },
             searchSpring() {
+                ctx.beginPath();
+                ctx.moveTo(this.cons.pointA.x, this.cons.pointA.y)
+                ctx.lineTo(this.cons.bodyB.position.x, this.cons.bodyB.position.y)
+                ctx.moveTo(this.cons2.pointA.x, this.cons2.pointA.y)
+                ctx.lineTo(this.cons2.bodyB.position.x, this.cons2.bodyB.position.y)
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = "#222";
+                ctx.stroke();
                 //draw the two dots on the end of the springs
                 ctx.beginPath();
                 ctx.arc(this.cons.pointA.x, this.cons.pointA.y, 6, 0, 2 * Math.PI);
@@ -1003,6 +1011,67 @@ const mobs = {
                                             ctx.stroke();
                                         },
                                     })
+                                }
+                                if (tech.isChatter && !this.isInvulnerable) {
+                                    let isTalking = false
+                                    for (let i = 0; i < simulation.ephemera.length; i++) {
+                                        if (simulation.ephemera[i].name === "in game text") {
+                                            isTalking = true
+                                        }
+                                    }
+                                    if (!isTalking) {
+                                        //from https://github.com/landgreen/n-gon/discussions/500
+                                        const quotes = [
+                                            // Existing quotes
+                                            "I can do *anything!*",
+                                            "Chaos, chaos!",
+                                            "Let's make the devilskn-",
+                                            "Darmok and Jaled at Tanagra",
+                                            "Kiazi's children, their faces wet!",
+                                            "Sokath with his eyes uncovered!",
+                                            "Are you suggesting that coconuts can migrate?",
+                                            "One, Two, Five!",
+                                            "Is it an African swallow or a European swallow?",
+                                            "kept you waiting, huh?",
+                                            "This prison... to hold... me?",
+                                            "Did everyone see that? Because I will not be doing it again",
+                                            "I see the light... it's a [404 Error]!",
+                                            "I wish i took those digeridoo lessons",
+                                            "Your mother was a hamster, and your father smelt of elderberries",
+                                            "In Rod we trust",
+                                            "AAAAAAAA",
+                                            "the devil may cry?",
+                                            "hey Mr M? are you still mad at me?",
+
+                                            // New suggestions from discussion #500
+                                            "yippee",
+                                            "If you wish to defeat me train for another hundred years.",
+                                            "WE CALLED TO TALK ABOUT YOUR CAR'S LIMITED WARRANTY",
+                                            "KAMEHAMEHA!!!!!!!!!!",
+                                            "Who you gonna call? GHOST BUSTERS!",
+                                            "JARVIS evaporate this man",
+                                            "Squirtle use water beam!",
+                                            "El pollo está en llamas.",
+                                            "pentagon, hexagon, octagon, nevergon.. na give you up",
+                                            "Eat cube bozo",
+                                            "let's make the devilsknife!",
+                                            "you know, I really dislike you.",
+                                            "Good luck, and may the odds be ever in your favor",
+                                            "You dare defy the Lord of Darkness."
+                                        ];
+                                        const color = `#${Math.floor(Math.random() * 76 + 180).toString(16)}${Math.floor(Math.random() * 121).toString(16).padStart(2, '0')}${Math.floor(Math.random() * 121).toString(16).padStart(2, '0')}`
+                                        const quote = quotes[Math.floor(Math.random() * quotes.length)]
+                                        // simulation.inGameConsole(`<span style="color:"${color}">${quote}</span>`, 360)
+                                        level.inGameText(this.position.x, this.position.y - 50, quote, 240, color)
+                                    }
+                                    // simulation.ephemera.push({
+                                    //     count: 240, //cycles before it self removes
+                                    //     vertices: this.vertices,
+                                    //     do() {
+                                    //         this.count--
+                                    //         if (this.count < 0) simulation.removeEphemera(this)
+                                    //     },
+                                    // })
                                 }
                             } else if (tech.isMobLowHealth && this.health < 0.25) {
                                 dmg *= 3
