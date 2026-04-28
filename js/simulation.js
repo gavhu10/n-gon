@@ -264,39 +264,41 @@ const simulation = {
         }
     },
     circleFlare(dup, loops = 100) {
-        boltNum = dup * 300
-        const bolts = []
-        colors = [powerUps.research.color, powerUps.ammo.color, powerUps.heal.color, powerUps.tech.color, powerUps.field.color, powerUps.gun.color]
-        for (let i = 0; i < boltNum; ++i) {
-            const mag = 6 + 20 * Math.random()
-            const angle = 2 * Math.PI * Math.random()
-            bolts.push({
-                x: m.pos.x,
-                y: m.pos.y,
-                Vx: mag * Math.cos(angle),
-                Vy: mag * Math.sin(angle),
-                color: colors[Math.floor(Math.random() * colors.length)]
-            })
-        }
-        let count = 0
-        loop = () => { //draw electricity
-            if (count++ < loops) requestAnimationFrame(loop)
-            for (let i = 0, len = bolts.length; i < len; ++i) {
-                bolts[i].x += bolts[i].Vx
-                bolts[i].y += bolts[i].Vy
-                if (Math.random() < 0.2) {
-                    simulation.drawList.push({
-                        x: bolts[i].x,
-                        y: bolts[i].y,
-                        radius: 1.5 + 5 * Math.random(),
-                        // color: "rgba(0,155,155,0.7)",
-                        color: bolts[i].color,
-                        time: Math.floor(9 + 25 * Math.random() * Math.random())
-                    });
+        if (!localSettings.isHideHUD) {
+            boltNum = dup * 300
+            const bolts = []
+            colors = [powerUps.research.color, powerUps.ammo.color, powerUps.heal.color, powerUps.tech.color, powerUps.field.color, powerUps.gun.color]
+            for (let i = 0; i < boltNum; ++i) {
+                const mag = 6 + 20 * Math.random()
+                const angle = 2 * Math.PI * Math.random()
+                bolts.push({
+                    x: m.pos.x,
+                    y: m.pos.y,
+                    Vx: mag * Math.cos(angle),
+                    Vy: mag * Math.sin(angle),
+                    color: colors[Math.floor(Math.random() * colors.length)]
+                })
+            }
+            let count = 0
+            loop = () => { //draw electricity
+                if (count++ < loops) requestAnimationFrame(loop)
+                for (let i = 0, len = bolts.length; i < len; ++i) {
+                    bolts[i].x += bolts[i].Vx
+                    bolts[i].y += bolts[i].Vy
+                    if (Math.random() < 0.2) {
+                        simulation.drawList.push({
+                            x: bolts[i].x,
+                            y: bolts[i].y,
+                            radius: 1.5 + 5 * Math.random(),
+                            // color: "rgba(0,155,155,0.7)",
+                            color: bolts[i].color,
+                            time: Math.floor(9 + 25 * Math.random() * Math.random())
+                        });
+                    }
                 }
             }
+            requestAnimationFrame(loop)
         }
-        requestAnimationFrame(loop)
     },
     boldActiveGunHUD() {
         if (b.inventory.length > 0) {
@@ -346,15 +348,18 @@ const simulation = {
     },
     lastLogTime: 0,
     isTextLogOpen: true,
+    consoleLength: 0,
     inGameConsole(text, time = 240) {
         if (!localSettings.isHideHUD && simulation.isTextLogOpen && !build.isExperimentSelection) {
-            if (simulation.lastLogTime > m.cycle) { //if there is an older message
+            if (simulation.lastLogTime > m.cycle && simulation.consoleLength < 30) { //if there is an older message
                 document.getElementById("text-log").innerHTML = document.getElementById("text-log").innerHTML + '<br>' + text;
                 simulation.lastLogTime = m.cycle + time;
+                simulation.consoleLength++
             } else {
                 document.getElementById("text-log").innerHTML = text;
                 document.getElementById("text-log").style.display = "inline";
                 simulation.lastLogTime = m.cycle + time;
+                simulation.consoleLength = 0
             }
         }
     },
@@ -573,6 +578,17 @@ const simulation = {
                     }
                 }
             }
+
+            if (tech.wire && tech.wire.segments.length) {
+                requestAnimationFrame(() => {
+                    const r = 32 * player.scale
+                    const a = m.angle + Math.PI
+                    for (let i = 0; i < tech.wire.segments.length; i++) {
+                        tech.wire.segments[i].y = tech.wire.segments[i].oldY = m.pos.y + (r * Math.sin(a))
+                        tech.wire.segments[i].x = tech.wire.segments[i].oldX = m.pos.x + (r * Math.cos(a))
+                    }
+                })
+            }
         }
     },
     setupCamera() { //makes the camera not scroll after changing locations
@@ -627,6 +643,26 @@ const simulation = {
     },
     restoreCamera() {
         ctx.restore();
+    },
+    energyGenGraphic(totalCycles = 10 + Math.floor(Math.random() * 20)) {
+        //energy generation animation
+        if (!localSettings.isHideHUD) {
+            simulation.ephemera.push({
+                where: { x: m.pos.x + 45 * (Math.random() - 0.5), y: m.pos.y + Math.random() * 100 },
+                count: totalCycles,
+                r: 1.5 + 3 * Math.random(),
+                do() {
+                    this.count--
+                    if (this.count < 0) simulation.removeEphemera(this)
+                    this.where.y -= 3
+
+                    ctx.beginPath();
+                    ctx.arc(this.where.x, this.where.y, this.r, 0, 2 * Math.PI);
+                    ctx.fillStyle = m.fieldMeterColor
+                    ctx.fill();
+                },
+            })
+        }
     },
     trails(swapPeriod = 150) {
         // const swapPeriod = 150
@@ -744,6 +780,23 @@ const simulation = {
     fpsInterval: 0, //set in startGame
     then: null,
     startGame(isBuildRun = false, isTrainingRun = false) {
+        if (localSettings.isHideHUD) {
+            simulation.draw.body = function () {
+                ctx.beginPath();
+                for (let i = 0, len = body.length; i < len; ++i) {
+                    let vertices = body[i].vertices;
+                    ctx.moveTo(vertices[0].x, vertices[0].y);
+                    for (let j = 1; j < vertices.length; j++) {
+                        ctx.lineTo(vertices[j].x, vertices[j].y);
+                    }
+                    ctx.lineTo(vertices[0].x, vertices[0].y);
+                }
+                ctx.fillStyle = color.block;
+                ctx.fill();
+            }
+        } else {
+            simulation.draw.body = simulation.draw.bodyDefault
+        }
         simulation.isTextLogOpen = true
         simulation.clearMap()
         if (!isBuildRun) { //if a build run logic flow returns to "experiment-button").addEventListener
@@ -904,7 +957,8 @@ const simulation = {
                         }
                         const damage = tech.damageAdjustments() //update damage bar
                         if (m.lastCalculatedDamage !== damage) {
-                            document.getElementById("damage-bar").style.height = Math.floor((Math.atan(0.25 * damage - 0.25) + 0.25) * 0.63 * canvas.height) + "px";
+                            document.getElementById("damage-bar").style.height = Math.floor((Math.atan(0.25 * damage - 0.25) + 0.25) * 0.5 * canvas.height) + "px";
+                            // document.getElementById("damage-num").innerHTML = `${damage.toFixed(2)}x dmg`
                             m.lastCalculatedDamage = damage
                         }
                     }
@@ -990,25 +1044,13 @@ const simulation = {
                     if (m.lastKillCycle + 300 > m.cycle) { //effects active for 5 seconds after killing a mob
                         if (tech.isEnergyRecovery && m.immuneCycle < m.cycle) {
                             m.energy += m.maxEnergy * 0.05 * level.isReducedRegen
-                            simulation.drawList.push({ //add dmg to draw queue
-                                x: m.pos.x,
-                                y: m.pos.y - 45,
-                                radius: Math.sqrt(m.maxEnergy * 0.05) * 60,
-                                color: "rgba(0, 204, 255,0.4)", //#0cf
-                                time: 4
-                            });
+                            for (let i = 0; i < 2; i++)simulation.energyGenGraphic()
                         }
                         if (tech.isHealthRecovery) {
                             if (tech.isEnergyHealth) {
                                 if (m.immuneCycle < m.cycle) {
                                     m.energy += m.maxEnergy * 0.005 * level.isReducedRegen
-                                    simulation.drawList.push({ //add dmg to draw queue
-                                        x: m.pos.x,
-                                        y: m.pos.y,
-                                        radius: Math.sqrt(m.maxEnergy * 0.02) * 60,
-                                        color: "rgba(0, 204, 255,0.4)", //#0cf
-                                        time: 4
-                                    });
+                                    simulation.energyGenGraphic()
                                 }
                             } else {
                                 const heal = 0.005 * m.maxHealth
@@ -1026,12 +1068,14 @@ const simulation = {
 
                     if (!(m.cycle % 420)) { //once every 7 seconds
                         //check if player is inside the map
-                        if (Matter.Query.point(map, m.pos).length > 0 || Matter.Query.point(map, player.position).length > 0) {
+
+                        if (Matter.Query.ray(map, m.pos, player.position).length > 0) {
+                            // if (Matter.Query.point(map, m.pos).length > 0 || Matter.Query.point(map, player.position).length > 0) {
                             //check for the next few seconds to see if being stuck continues
                             simulation.ephemera.push({
                                 count: 240, //cycles before it self removes
                                 do() {
-                                    if (Matter.Query.point(map, m.pos).length > 0 || Matter.Query.point(map, player.position).length > 0) {
+                                    if (Matter.Query.ray(map, m.pos, player.position).length > 0) {
                                         this.count--
 
                                         if (this.count < 0) {
@@ -1063,12 +1107,21 @@ const simulation = {
                         if (tech.cyclicImmunity && m.immuneCycle < m.cycle + tech.cyclicImmunity) m.immuneCycle = m.cycle + tech.cyclicImmunity; //player is immune to damage for 60 cycles
 
 
-
                         let i = body.length;
                         while (i--) {
                             if (body[i].position.y > simulation.fallHeight) {
-                                Matter.Composite.remove(engine.world, body[i]);
-                                body.splice(i, 1);
+                                if (body[i].isInvulnerable) {
+                                    Matter.Body.setVelocity(body[i], { x: 0, y: 0 });
+                                    if (level.fallMode === "position") {
+                                        const posXClamped = Math.min(Math.max(level.fallModeBounds.left, body[i].position.x), level.fallModeBounds.right)
+                                        Matter.Body.setPosition(body[i], { x: posXClamped, y: level.enter.y - 4000 });
+                                    } else {
+                                        Matter.Body.setPosition(body[i], { x: level.enter.x + 50, y: level.enter.y - 20 });
+                                    }
+                                } else {
+                                    Matter.Composite.remove(engine.world, body[i]);
+                                    body.splice(i, 1);
+                                }
                             }
                         }
                         i = powerUp.length
@@ -1146,6 +1199,7 @@ const simulation = {
                         if (tech.isMutualism && this.isMutualismActive) {
                             if (tech.isEnergyHealth) {
                                 m.energy += 0.01 + 0.01 * ((bullet[i].isSpore || bullet[i].isFlea) ? 0 : 1)
+                                simulation.energyGenGraphic()
                             } else {
                                 m.health += 0.01 + 0.01 * ((bullet[i].isSpore || bullet[i].isFlea) ? 0 : 1)
                                 if (m.health > m.maxHealth) m.health = m.maxHealth;
@@ -1235,13 +1289,15 @@ const simulation = {
                 //     zombieCount++
                 // }
             }
-            const where = { x: level.enter.x + 50, y: level.enter.y - 60 }
+
+            // const where = m.pos
             //respawn drones in animation frame
             requestAnimationFrame(() => {
                 let respawnDrones = () => {
                     if (droneArray.length) {
                         requestAnimationFrame(respawnDrones);
                         if (!simulation.paused && !simulation.isChoosing && m.alive) {
+                            const where = { x: level.enter.x + 50, y: level.enter.y - 60 }
                             if (tech.isDroneRadioactive) {
                                 b.droneRadioactive({ x: where.x + 50 * (Math.random() - 0.5), y: where.y + 50 * (Math.random() - 0.5) }, 0)
                                 if (droneArray[0].scale) bullet[bullet.length - 1].size = droneArray[0].scale
@@ -1268,6 +1324,7 @@ const simulation = {
                     requestAnimationFrame(respawnSpores);
                     if (!simulation.paused && !simulation.isChoosing) {
                         sporeCount--
+                        const where = { x: level.enter.x + 50, y: level.enter.y - 60 }
                         b.spore({ x: where.x + 100 * (Math.random() - 0.5), y: where.y + 120 * (Math.random() - 0.5) })
                     }
                 }
@@ -1280,6 +1337,7 @@ const simulation = {
                     requestAnimationFrame(respawnWorms);
                     if (!simulation.paused && !simulation.isChoosing) {
                         wormCount--
+                        const where = { x: level.enter.x + 50, y: level.enter.y - 60 }
                         b.worm({ x: where.x + 100 * (Math.random() - 0.5), y: where.y + 120 * (Math.random() - 0.5) })
                     }
                 }
@@ -1294,6 +1352,7 @@ const simulation = {
                         fleaCount--
                         const speed = 6 + 3 * Math.random()
                         const angle = 2 * Math.PI * Math.random()
+                        const where = { x: level.enter.x + 50, y: level.enter.y - 60 }
                         b.flea({ x: where.x + 100 * (Math.random() - 0.5), y: where.y + 120 * (Math.random() - 0.5) }, { x: speed * Math.cos(angle), y: speed * Math.sin(angle) })
                     }
                 }
@@ -1746,7 +1805,7 @@ const simulation = {
                 }
             }
         },
-        body() {
+        bodyDefault() {
             ctx.beginPath();
             for (let i = 0, len = body.length; i < len; ++i) {
                 let vertices = body[i].vertices;
@@ -1762,6 +1821,7 @@ const simulation = {
             ctx.strokeStyle = color.blockS;
             ctx.stroke();
         },
+        body() { },
         cons() {
             ctx.beginPath();
             for (let i = 0, len = cons.length; i < len; ++i) {

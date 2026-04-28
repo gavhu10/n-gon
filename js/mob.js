@@ -1112,7 +1112,10 @@ const mobs = {
                         if (tech.energySiphon && this.isDropPowerUp && m.immuneCycle < m.cycle) {
                             //dmg !== Infinity &&
                             const regen = Math.min(this.health, dmg) * tech.energySiphon * level.isReducedRegen
-                            if (!isNaN(regen) && regen !== Infinity) m.energy += regen
+                            if (!isNaN(regen) && regen !== Infinity) {
+                                m.energy += regen //max regen is 0.04 with one stack of tech.energySiphon
+                                simulation.energyGenGraphic(3 + Math.min(20, Math.floor(400 * regen)))
+                            }
                         }
                         dmg /= Math.sqrt(this.mass)
                     }
@@ -1267,6 +1270,11 @@ const mobs = {
                     }
 
                     if (tech.isVerlet && !m.isTimeDilated) {
+                        if (tech.isBarycenter) {
+                            b.orbitBot(player.position, false);
+                            bullet[bullet.length - 1].endCycle = simulation.cycle + 1080
+                        }
+
                         requestAnimationFrame(() => {
                             simulation.timePlayerSkip(this.isBoss ? 60 : 30)
                             simulation.loop(); //ending with a wipe and normal loop fixes some very minor graphical issues where things are draw in the wrong locations
@@ -1319,6 +1327,20 @@ const mobs = {
                         } else {
                             for (let i = 0; i < amount; i++) b.spore(this.position)
                         }
+                    }
+                    if (tech.isChitin) {
+                        // add new segment where the current tip is
+                        for (let i = 0; i < 2; i++) {
+                            if (tech.wire.segments.length < 200) { //cap max length at 200 for performance
+                                const last = tech.wire.segments[tech.wire.segments.length - 1];
+                                tech.wire.segments.push({ x: last.x, y: last.y, oldX: last.x, oldY: last.y });
+                            }
+                        }
+                    }
+                    if (tech.isConchoidal) {
+                        const dmg = 1.04
+                        m.damageDone *= dmg
+                        tech.conchoidalDamage *= dmg
                     }
                     if (tech.isExplodeMob) {
                         b.explosion(this.position, Math.min(700, Math.sqrt(this.mass + 6) * (30 + 60 * Math.random())))
@@ -1445,7 +1467,7 @@ const mobs = {
             replace(i) {
                 //if there are too many bodies don't turn into blocks to help performance
                 // if (this.leaveBody && body.length < mobs.maxMobBody && this.mass < 200 && this.radius > 18) {
-                if (this.leaveBody && body.length < mobs.maxMobBody && this.mass < 200 && this.mass > 1 && this.radius > 18) {
+                if (this.leaveBody && body.length < mobs.maxMobBody && this.mass < 200 * (localSettings.isHideHUD ? 0.4 : 1) && this.mass > 1 && this.radius > 18) {
 
                     let v = Matter.Vertices.hull(Matter.Vertices.clockwiseSort(this.vertices)) //might help with vertex collision issue, not sure
                     if (v.length > 5 && body.length < 35 && Math.random() < 0.25) {

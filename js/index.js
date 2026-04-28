@@ -1,25 +1,10 @@
 "use strict";
 
-//list of the recent github hashes, shortened to the first 7 digits of the full hash.
-//the last element of the array is the most recent commit
-// const commitHashes = ['6472d6d', 'c8bf77d', 'eb8f4b0', 'f556371', '74f569b', 'c9f355b', '6814c10', '9402cf2', 'f8b4b6f', '82c0ea8', 'f9849d4', 'd00a94a', '3654198', '9bcf4d3', 'eecf763', 'be109bb', 'e2bf9aa', '3ea8bfd', 'c614451', '1752453', '34e05c7', '07af7a7', '2e76b5c', '1b23dec', '0b728fb', 'e6e5058', '4f87444', 'e418b93', 'b3fa1bf', '09c9e93', 'd8e978f', 'da559f4', '1d4b0c4', '4415942', '6cd2502', '8a211e8', '3d423a5', '4933ef5', '77cafe3', 'bffaeed', '99bd1c8', '8a3ac11', 'bf5f866', 'b14f2c1', 'ff613dc', '1129b9d', '3844d00', 'e9d2262', 'ce74f42', 'ad33cf6', '2d12f1d', 'c47d860', '4e6acdd', '778a2c9', '68f9269', '17f65cf', 'b5e4b0d', '38d9931', '64f2a9f', '64c81cd', '254ec00', '38ef45a', '1728b53', 'fde3a58', '6c3d97a', '951806d', '2b99e59', '3ce6bec', '773ee5c', '4c6b480', 'a1164ed', '507b060', '63bfaba', 'eabd146', '438c166', '1903b9e', '5e12cea', 'f43a5e3', '022e2fa', '20f9b79', 'fc70dfe', '5eae070', '8dacb02', '52046ca', '220a6b4', 'ebd2274', 'cea1c64', 'a47ef97', 'a8c6c0e', '9c2c9be', '8bb8222', '1fde74d', 'f1a6713', '97c5509', '1966173', '2daeae1', '1040d1f', 'c9a5ab9', '77e484c', 'b2426cd']
-// const lastShortHash = 'b2426cd'
-//Landgreen needs to update the commitHashes array with the most recent commit hash on each new upload, but the array will always be missing the current hash since it is generated with each new commit
-//write code to check the 2nd most recent hash and see if it match an element in the commitHashes array.  Use that to calculate how many commits have been made since the last update
-
-
-
 //convert text into numbers for seed
 Math.hash = s => {
     for (var i = 0, h = 9; i < s.length;) h = Math.imul(h ^ s.charCodeAt(i++), 9 ** 9);
     return h ^ h >>> 9
 }
-
-// const date1 = new Date()
-// console.log(date1.getUTCHours())
-// document.getElementById("seed").placeholder = Math.initialSeed = String(date1.getUTCDate() * date1.getUTCFullYear()) // daily seed,  day + year
-
-// document.getElementById("seed").placeholder = Math.initialSeed = Math.floor(Date.now() % 100000) //random every time:  just the time in milliseconds UTC
 
 // simulation.inGameConsole(`<strong style='color:red;'>ERROR:</strong> ${error.message}  <u>${error.filename}:${error.lineno}</u>`)
 window.addEventListener('error', error => {
@@ -406,20 +391,19 @@ const build = {
         } else {
             mobText = ""
         }
-
         function cleanText(text) {
             return text.replace('Key', '').replace('Digit', '')
         }
-
         let fullscreenWarning = document.fullscreenElement ? `<div><span style="font-size:1.25em;font-weight: 600; float: left;">FULLSCREEN</span> <em style="float: right;color:#ccc;">press ${cleanText(input.key.fullscreen)} or hold ESC to exit</em></div><br>` : ""
+
         let text = `<div class="pause-grid-module" style="padding: 8px;">
-<span style="font-size:1.4em;font-weight: 600; float: left;">PAUSED</span> 
+<span class="color-paused" style="font-size:1.0em; float: left;">PAUSED</span> 
 <em style="float: right;color:#ccc;">press ${input.key.pause} to resume</em>
 <br>
 ${fullscreenWarning}
 <button onclick="build.shareURL(false)" class='sort-button' style="font-size:1em;float: right;">copy build URL</button>
 <input onclick="build.hideHUD('settings')" type="checkbox" id="hide-hud" name="hide-hud" ${localSettings.isHideHUD ? "checked" : ""}>
-<label for="hide-hud" title="hide: tech, damage taken, damage, in game console" style="font-size:1.15em;">minimal HUD</label>
+<label for="hide-hud" title="hide: tech, damage taken, damage, in game console, final boss health bar, tech: filament, tech: pair production, duplication animation, eigen animation, lower max body caps, no stroke on blocks" style="font-size:1.15em;">performance mode</label>
 </div>
 
 <div class="pause-grid-module">
@@ -479,36 +463,37 @@ ${simulation.difficultyMode > 4 ? `<details id="constraints-details" style="padd
 </div>
 </details>
 </div>`
-        if ((tech.isPauseSwitchField || simulation.testing)) {  //&& !simulation.isChoosing
-            // const fieldNameP = m.fieldUpgrades[m.fieldMode > 1 ? m.fieldMode - 1 : m.fieldUpgrades.length - 1].name
-            // const fieldNameN = m.fieldUpgrades[m.fieldMode === m.fieldUpgrades.length - 2 ? 1 : m.fieldMode + 1].name
-            //button above for previous
-            text += `<div class="pause-grid-module" id ="pause-field-previous" style="animation: fieldColorCycle 3s linear infinite alternate; border-top: 1px solid #000;border-bottom: 1px solid #000;">
-                           <div class="grid-title" style="text-align: center;">↑ <div class="circle-grid field"></div> ↑</div></div>`
-            //button for current
-            const style = `style="height:auto;"`
-            text += `<div class="pause-grid-module card-background" id="pause-field" ${style} >
-                                                    <div class="card-text">
-                                                        <div class="grid-title"><div class="circle-grid-title field"></div> &nbsp; ${build.nameLink(m.fieldUpgrades[m.fieldMode].name)}</div>
-                                                        ${m.fieldUpgrades[m.fieldMode].description}</div> </div>`
-            //button below for next
-            text += `<div class="pause-grid-module" id="pause-field-next" style="animation: fieldColorCycle 3s linear infinite alternate;border-bottom: 1px solid #000;">
-                                                    <div class="grid-title" style="text-align: center;">↓ <div class="circle-grid field"></div> ↓</div></div>`
+        //         if ((tech.isPauseSwitchField || simulation.testing)) {  //&& !simulation.isChoosing
+        //             // const fieldNameP = m.fieldUpgrades[m.fieldMode > 1 ? m.fieldMode - 1 : m.fieldUpgrades.length - 1].name
+        //             // const fieldNameN = m.fieldUpgrades[m.fieldMode === m.fieldUpgrades.length - 2 ? 1 : m.fieldMode + 1].name
+        //             //button above for previous
+        //             text += `<div class="pause-grid-module" id ="pause-field-previous" style="animation: fieldColorCycle 3s linear infinite alternate; border-top: 1px solid #000;border-bottom: 1px solid #000;">
+        // <div class="grid-title" style="text-align: center;">↑ <div class="circle-grid field"></div> ↑</div></div>`
+        //             //button for current
+        //             const style = `style="height:auto;"`
+        //             text += `<div class="pause-grid-module card-background" id="pause-field" ${style} >
+        // <div class="card-text">
+        // <div class="grid-title"><div class="circle-grid-title field" onclick="speechHandler.speech('${m.fieldUpgrades[m.fieldMode].name}')"></div> &nbsp; ${build.nameLink(m.fieldUpgrades[m.fieldMode].name)}</div>
+        // ${m.fieldUpgrades[m.fieldMode].description}</div> </div>`
+        //             //button below for next
+        //             text += `<div class="pause-grid-module" id="pause-field-next" style="animation: fieldColorCycle 3s linear infinite alternate;border-bottom: 1px solid #000;">
+        // <div class="grid-title" style="text-align: center;">↓ <div class="circle-grid field"></div> ↓</div></div>`
 
 
-        } else {
-            const style = `style="height:auto;"`
-            text += `<div class="pause-grid-module card-background" id="pause-field" ${style} >
-                                                    <div class="card-text">
-                                                        <div class="grid-title"><div class="circle-grid-title field"></div> &nbsp; ${build.nameLink(m.fieldUpgrades[m.fieldMode].name)}</div>
-                                                        ${m.fieldUpgrades[m.fieldMode].description}</div> </div>`
-        }
+        //         } else {
+        const style = `style="height:auto;"`
+        text += `<div class="pause-grid-module card-background" id="pause-field" ${style}>
+<div class="card-text">
+<div class="grid-title"><div class="circle-grid-title field" onclick="speechHandler.speech('${m.fieldUpgrades[m.fieldMode].name}')"></div> &nbsp; ${build.nameLink(m.fieldUpgrades[m.fieldMode].name)}</div>
+${m.fieldUpgrades[m.fieldMode].description}</div> </div>`
+        // }
         for (let i = 0, len = b.inventory.length; i < len; i++) {
             const style = `style="height:auto;"`
+            //onclick="speechHandler.speech('${tech.tech[i].name}')"
             text += `<div class="pause-grid-module card-background" ${style} >
-                                                    <div class="card-text">
-                                                        <div class="grid-title"><div class="circle-grid-title gun"></div> &nbsp; ${build.nameLink(b.guns[b.inventory[i]].name)} - <span style="font-size:100%;font-weight: 100;">${b.guns[b.inventory[i]].ammo}</span></div>
-                                                        ${b.guns[b.inventory[i]].descriptionFunction()}</div> </div>`
+<div class="card-text">
+<div class="grid-title"><div class="circle-grid-title gun" onclick="speechHandler.speech('${b.guns[b.inventory[i]].name}')"></div> &nbsp; ${build.nameLink(b.guns[b.inventory[i]].name)} - <span style="font-size:100%;font-weight: 100;">${b.guns[b.inventory[i]].ammo}</span></div>
+${b.guns[b.inventory[i]].descriptionFunction()}</div> </div>`
         }
         let el = document.getElementById("pause-grid-left")
         el.style.display = "grid"
@@ -526,16 +511,26 @@ ${simulation.difficultyMode > 4 ? `<details id="constraints-details" style="padd
         let text = `<div class="sort">
     <button onclick="build.sortTech('guntech')" class='sort-button'>${powerUps.orb.gunTech()}</button>
     <button onclick="build.sortTech('fieldtech')" class='sort-button'>${powerUps.orb.fieldTech()}</button>
-    <button onclick="build.sortTech('damage')" class='sort-button'><strong class='color-d'>damage</strong></button>
-    <button onclick="build.sortTech('damage taken')" class='sort-button'><strong style="letter-spacing: 1px;font-weight: 100;">dmg taken</strong></button>
-    <button onclick="build.sortTech('heal')" class='sort-button'><strong class='color-h'>heal</strong></button>
+    <button onclick="build.sortTech('damage')" class='sort-button'><strong class='color-d'>dmg</strong></button>
+    <button onclick="build.sortTech('damage taken')" class='sort-button'><strong style="font-weight: 100;">dmg taken</strong></button>
     <button onclick="build.sortTech('energy')" class='sort-button'><strong class='color-f'>energy</strong></button>
-    <input type="search" id="sort-input" style="width: 8em;font-size: 0.6em;color:#000;" placeholder="sort by" />
-    <button onclick="build.sortTech('input')" class='sort-button' style="border-radius: 0em;border: 1.5px #000 solid;font-size: 0.6em;" value="damage">sort</button>
+    <button onclick="build.sortTech('heal')" class='sort-button'><strong class='color-h'>heal</strong></button>
+    <button onclick="build.sortTech('bot')" class='sort-button color-bot' style="border-radius: 0px;">bot</button>
+    <button onclick="build.sortTech('duplic')" class='sort-button'><strong class='color-dup'>dup</strong></button>
 </div>`;
-        const ejectClass = (tech.isPauseEjectTech && !simulation.isChoosing && m.immuneCycle < m.cycle) ? 'pause-eject' : ''
+        // <input type="search" id="sort-input" style="width: 8em;font-size: 0.6em;color:#000;" placeholder="sort by" />
+        // <button onclick="build.sortTech('input')" class='sort-button' style="border-radius: 0em;border: 1.5px #000 solid;font-size: 0.6em;" value="damage">sort</button>
+        // tech.tech.sort((a, b) => {
+        //     if (a.isInput && b.isInput) {
+        //         return (a.allowed() === b.allowed()) ? 0 : a.allowed() ? -1 : 1;
+        //     }
+        //     if (a.isInput && !b.isInput) return -1; //sort to the top
+        //     if (!a.isInput && b.isInput) return 1; //sort to the bottom
+        //     return 0;
+        // });
         for (let i = 0, len = tech.tech.length; i < len; i++) {
             if (tech.tech[i].count > 0) {
+                const ejectClass = (tech.isPauseEjectTech && !simulation.isChoosing && m.immuneCycle < m.cycle) ? 'pause-eject' : '' //&& !tech.tech[i].isInput
                 const style = `style="height:auto;"`
                 // const techCountText = tech.tech[i].count > 1 ? `(${tech.tech[i].count}x)` : "";
                 if (tech.tech[i].isInstant) {
@@ -549,6 +544,9 @@ ${simulation.difficultyMode > 4 ? `<details id="constraints-details" style="padd
                 } else if (tech.tech[i].isSkin) {
                     text += `<div id="${i}-pause-tech" class="pause-grid-module card-background ${ejectClass}" onclick="powerUps.pauseEjectTech(${i})" ${style}>`
                     text += build.skinTechText(i) + "</div>"
+                } else if (tech.tech[i].isSkinUpgrade) {
+                    text += `<div id="${i}-pause-tech" class="pause-grid-module card-background ${ejectClass}" onclick="powerUps.pauseEjectTech(${i})" ${style}>`
+                    text += build.skinTechUpgradeText(i) + "</div>"
                 } else if (tech.tech[i].isJunk) {
                     text += `<div id="${i}-pause-tech" class="pause-grid-module card-background ${ejectClass}" onclick="powerUps.pauseEjectTech(${i})" ${style}>`
                     text += build.junkTechText(i) + "</div>"
@@ -565,14 +563,14 @@ ${simulation.difficultyMode > 4 ? `<details id="constraints-details" style="padd
         el.innerHTML = text
 
         //add event listener for pressing enter key when in sort
-        function pressEnterSort(event) {
-            if (event.key === 'Enter') {
-                requestAnimationFrame(() => { document.getElementById("sort-input").focus(); });
-                // event.preventDefault(); // Prevent the default action to avoid form submission or any other default action
-                build.sortTech('input')
-            }
-        }
-        document.getElementById("sort-input").addEventListener('keydown', pressEnterSort);
+        // function pressEnterSort(event) {
+        //     if (event.key === 'Enter') {
+        //         requestAnimationFrame(() => { document.getElementById("sort-input").focus(); });
+        //         // event.preventDefault(); // Prevent the default action to avoid form submission or any other default action
+        //         build.sortTech('input')
+        //     }
+        // }
+        // document.getElementById("sort-input").addEventListener('keydown', pressEnterSort);
         // requestAnimationFrame(() => { document.getElementById("sort-input").focus(); });
     },
     sortTech(find, isExperiment = false) {
@@ -642,21 +640,21 @@ ${simulation.difficultyMode > 4 ? `<details id="constraints-details" style="padd
                 if (!a.isBotTech && b.isBotTech) return 1; //sort to the bottom
                 return 0;
             });
-        } else if (document.getElementById("sort-input").value === 'skin') {
-            tech.tech.sort((a, b) => {
-                if (a.isSkin && b.isSkin) {
-                    return (a.allowed() === b.allowed()) ? 0 : a.allowed() ? -1 : 1;
-                }
-                if (a.isSkin && !b.isSkin) return -1; //sort to the top
-                if (!a.isSkin && b.isSkin) return 1; //sort to the bottom
-                return 0;
-            });
-        } else if (document.getElementById("sort-input").value === 'junk') {
-            tech.tech.sort((a, b) => {
-                if (a.isJunk && !b.isJunk) return -1; //sort to the top
-                if (!a.isJunk && b.isJunk) return 1; //sort to the bottom
-                return 0;
-            });
+            // } else if (document.getElementById("sort-input").value === 'skin') {
+            //     tech.tech.sort((a, b) => {
+            //         if (a.isSkin && b.isSkin) {
+            //             return (a.allowed() === b.allowed()) ? 0 : a.allowed() ? -1 : 1;
+            //         }
+            //         if (a.isSkin && !b.isSkin) return -1; //sort to the top
+            //         if (!a.isSkin && b.isSkin) return 1; //sort to the bottom
+            //         return 0;
+            //     });
+            // } else if (document.getElementById("sort-input").value === 'junk') {
+            //     tech.tech.sort((a, b) => {
+            //         if (a.isJunk && !b.isJunk) return -1; //sort to the top
+            //         if (!a.isJunk && b.isJunk) return 1; //sort to the bottom
+            //         return 0;
+            //     });
         } else if (find === 'damage') {
             tech.tech.sort(sortKeyword);
         } else if (find === 'damage taken') {
@@ -664,6 +662,8 @@ ${simulation.difficultyMode > 4 ? `<details id="constraints-details" style="padd
         } else if (find === 'defense') {
             tech.tech.sort(sortKeyword);
         } else if (find === 'energy') {
+            tech.tech.sort(sortKeyword);
+        } else if (find === 'duplic') {
             tech.tech.sort(sortKeyword);
         } else if (find === 'input') {
             find = document.getElementById("sort-input").value.toLowerCase();
@@ -676,7 +676,7 @@ ${simulation.difficultyMode > 4 ? `<details id="constraints-details" style="padd
         } else {
             build.generatePauseRight() //makes the right side of the pause menu with the tech            
         }
-        document.getElementById("sort-input").value = find; //make the sorted string display in the keyword search input field
+        if (isExperiment) document.getElementById("sort-input").value = find; //make the sorted string display in the keyword search input field
         simulation.updateTechHUD();
     },
     unPauseGrid() {
@@ -713,44 +713,65 @@ ${simulation.difficultyMode > 4 ? `<details id="constraints-details" style="padd
     isExperimentSelection: false,
     isExperimentRun: false,
     techText(i) {
-        return `<div class="card-text" >
-                                <div class="grid-title" ><div class="circle-grid-title tech"></div> &nbsp; ${build.nameLink(tech.tech[i].name)} ${tech.tech[i].count > 1 ? `(${tech.tech[i].count}x)` : ""}</div>
-                                ${tech.tech[i].descriptionFunction ? tech.tech[i].descriptionFunction() : tech.tech[i].description}</div>`
+        return `<div class="card-text">
+                <div class="grid-title" ><div class="circle-grid-title tech" onclick="speechHandler.speech('${tech.tech[i].name}')"></div> &nbsp; ${build.nameLink(tech.tech[i].name)} ${tech.tech[i].count > 1 ? `(${tech.tech[i].count}x)` : ""}</div>
+                ${tech.tech[i].descriptionFunction ? tech.tech[i].descriptionFunction() : tech.tech[i].description}</div>`
     },
     instantTechText(i) {
         // 
-        return `<div class="card-text" >
-                                <div class="grid-title" > <div class="circle-grid-instant"></div> &nbsp; ${build.nameLink(tech.tech[i].name)} ${tech.tech[i].count > 1 ? `(${tech.tech[i].count}x)` : ""}</div>
-                                ${tech.tech[i].descriptionFunction ? tech.tech[i].descriptionFunction() : tech.tech[i].description}</div>`
+        return `<div class="card-text">
+                <div class="grid-title" > <div class="circle-grid-instant" onclick="speechHandler.speech('${tech.tech[i].name}')"></div> &nbsp; ${build.nameLink(tech.tech[i].name)} ${tech.tech[i].count > 1 ? `(${tech.tech[i].count}x)` : ""}</div>
+                ${tech.tech[i].descriptionFunction ? tech.tech[i].descriptionFunction() : tech.tech[i].description}</div>`
     },
     skinTechText(i) {
         return `<div class="card-text"> <div class="grid-title">
-                                <span style="position:relative;">
-                                    <div class="circle-grid-skin"></div>
-                                    <div class="circle-grid-skin-eye"></div>
-                                </span> &nbsp; &nbsp; &nbsp; &nbsp; ${build.nameLink(tech.tech[i].name)} ${tech.tech[i].count > 1 ? `(${tech.tech[i].count}x)` : ""}</div>
-                                ${tech.tech[i].descriptionFunction ? tech.tech[i].descriptionFunction() : tech.tech[i].description}</div>`
+                <span style="position:relative;" onclick="speechHandler.speech('${tech.tech[i].name}')">
+                    <div class="circle-grid-skin"></div>
+                    <div class="circle-grid-skin-eye"></div>
+                </span> &nbsp; &nbsp; &nbsp; &nbsp; ${build.nameLink(tech.tech[i].name)} ${tech.tech[i].count > 1 ? `(${tech.tech[i].count}x)` : ""}</div>
+                ${tech.tech[i].descriptionFunction ? tech.tech[i].descriptionFunction() : tech.tech[i].description}</div>`
+    },
+    // skinTechUpgradeText(i) {
+    //     return `<div class="card-text"> <div class="grid-title">
+    //             <span style="position:relative;" onclick="speechHandler.speech('${tech.tech[i].name}')">
+    //                 <div class="circle-grid-skin tech" style="opacity:0.5;"></div>
+    //                 <div class="circle-grid-skin-eye"></div>
+    //             </span> &nbsp; &nbsp; &nbsp; &nbsp; ${build.nameLink(tech.tech[i].name)} ${tech.tech[i].count > 1 ? `(${tech.tech[i].count}x)` : ""}</div>
+    //             ${tech.tech[i].descriptionFunction ? tech.tech[i].descriptionFunction() : tech.tech[i].description}</div>`
+    // },
+    skinTechUpgradeText(i) {
+        return `<div class="card-text"> <div class="grid-title">
+                <span style="position:relative;">
+                    <div class="circle-grid-title" style="position:absolute; top:0.18em; left:0.56em;opacity:1;">
+                        <span style="position:relative;">
+                            <div class="circle-grid-skin"></div>
+                            <div class="circle-grid-skin-eye"></div>
+                        </span>
+                    </div>
+                    <div class="circle-grid-title tech" style="position:absolute; top:0.12em; left:-0.1em;opacity:0.93;"></div>
+                </span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ${build.nameLink(tech.tech[i].name)} ${tech.tech[i].count > 1 ? `(${tech.tech[i].count}x)` : ""}</div>
+                ${tech.tech[i].descriptionFunction ? tech.tech[i].descriptionFunction() : tech.tech[i].description}</div>`
     },
     gunTechText(i) {
         return `<div class="card-text"> <div class="grid-title">
-                                <span style="position:relative;">
-                                    <div class="circle-grid-title tech" style="position:absolute; top:0.12em; left:0;opacity:0.8;"></div>
-                                    <div class="circle-grid-title gun" style="position:absolute; top:0.12em; left:10px; opacity:0.65;"></div>
-                                </span> &nbsp; &nbsp; &nbsp; &nbsp;  &nbsp; ${build.nameLink(tech.tech[i].name)} ${tech.tech[i].count > 1 ? `(${tech.tech[i].count}x)` : ""}</div>
-                                ${tech.tech[i].descriptionFunction ? tech.tech[i].descriptionFunction() : tech.tech[i].description}</div>`
+                <span style="position:relative;" onclick="speechHandler.speech('${tech.tech[i].name}')">
+                    <div class="circle-grid-title tech" style="position:absolute; top:0.12em; left:0;opacity:0.8;"></div>
+                    <div class="circle-grid-title gun" style="position:absolute; top:0.12em; left:0.55em; opacity:0.65;"></div>
+                </span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ${build.nameLink(tech.tech[i].name)} ${tech.tech[i].count > 1 ? `(${tech.tech[i].count}x)` : ""}</div>
+                ${tech.tech[i].descriptionFunction ? tech.tech[i].descriptionFunction() : tech.tech[i].description}</div>`
     },
     fieldTechText(i) {
         return `<div class="card-text"><div class="grid-title">
-                                <span style="position:relative;">
-                                    <div class="circle-grid-title tech" style="position:absolute; top:0.12em; left:0;opacity:0.8;"></div>
-                                    <div class="circle-grid-title field" style="position:absolute; top:0.12em; left:10px;opacity:0.65;"></div>
-                                </span> &nbsp; &nbsp; &nbsp; &nbsp;  &nbsp; ${build.nameLink(tech.tech[i].name)} ${tech.tech[i].count > 1 ? `(${tech.tech[i].count}x)` : ""}</div>
-                                ${tech.tech[i].descriptionFunction ? tech.tech[i].descriptionFunction() : tech.tech[i].description}</div>`
+                <span style="position:relative;" onclick="speechHandler.speech('${tech.tech[i].name}')">
+                    <div class="circle-grid-title tech" style="position:absolute; top:0.12em; left:0;opacity:0.8;"></div>
+                    <div class="circle-grid-title field" style="position:absolute; top:0.12em; left:0.55em;opacity:0.65;"></div>
+                </span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ${build.nameLink(tech.tech[i].name)} ${tech.tech[i].count > 1 ? `(${tech.tech[i].count}x)` : ""}</div>
+                ${tech.tech[i].descriptionFunction ? tech.tech[i].descriptionFunction() : tech.tech[i].description}</div>`
     },
     junkTechText(i) {
         return `<div class="card-text">
-                                <div class="grid-title"><div class="circle-grid-title junk"></div> &nbsp; ${build.nameLink(tech.tech[i].name)} ${tech.tech[i].count > 1 ? `(${tech.tech[i].count}x)` : ""}</div>
-                                ${tech.tech[i].descriptionFunction ? tech.tech[i].descriptionFunction() : tech.tech[i].description}</div>`
+                <div class="grid-title"><div class="circle-grid-title junk" onclick="speechHandler.speech('${tech.tech[i].name}')"></div> &nbsp; ${build.nameLink(tech.tech[i].name)} ${tech.tech[i].count > 1 ? `(${tech.tech[i].count}x)` : ""}</div>
+                ${tech.tech[i].descriptionFunction ? tech.tech[i].descriptionFunction() : tech.tech[i].description}</div>`
     },
     choosePowerUp(index, type, isAllowed = false) {
         if (type === "gun") {
@@ -824,6 +845,9 @@ ${simulation.difficultyMode > 4 ? `<details id="constraints-details" style="padd
                     } else if (tech.tech[i].isSkin) {
                         techID.classList.remove('experiment-grid-hide');
                         techID.innerHTML = build.skinTechText(i)
+                    } else if (tech.tech[i].isSkinUpgrade) {
+                        techID.classList.remove('experiment-grid-hide');
+                        techID.innerHTML = build.skinTechUpgradeText(i)
                     } else if (tech.tech[i].isInstant) {
                         techID.innerHTML = build.instantTechText(i)
                     } else {
@@ -851,6 +875,8 @@ ${simulation.difficultyMode > 4 ? `<details id="constraints-details" style="padd
                         techID.innerHTML = build.junkTechText(i)
                     } else if (tech.tech[i].isSkin) {
                         techID.innerHTML = build.skinTechText(i)
+                    } else if (tech.tech[i].isSkinUpgrade) {
+                        techID.innerHTML = build.skinTechUpgradeText(i)
                     } else if (tech.tech[i].isInstant) {
                         techID.innerHTML = build.instantTechText(i)
                     } else {
@@ -867,10 +893,12 @@ ${simulation.difficultyMode > 4 ? `<details id="constraints-details" style="padd
     <div class="sort" style="border: 0px;">
         <button onclick="build.sortTech('guntech', true)" class='sort-button'>${powerUps.orb.gunTech()}</button>
         <button onclick="build.sortTech('fieldtech', true)" class='sort-button'>${powerUps.orb.fieldTech()}</button>
-        <button onclick="build.sortTech('damage', true)" class='sort-button'><strong class='color-d'>damage</strong></button>
-        <button onclick="build.sortTech('damage taken', true)" class='sort-button'><strong style="letter-spacing: 1px;font-weight: 100;">dmg taken</strong></button>
-        <button onclick="build.sortTech('heal', true)" class='sort-button'><strong class='color-h'>heal</strong></button>
+        <button onclick="build.sortTech('damage', true)" class='sort-button'><strong class='color-d'>dmg</strong></button>
+        <button onclick="build.sortTech('damage taken', true)" class='sort-button'><strong style="font-weight: 100;">dmg taken</strong></button>
         <button onclick="build.sortTech('energy', true)" class='sort-button'><strong class='color-f'>energy</strong></button>
+        <button onclick="build.sortTech('heal', true)" class='sort-button'><strong class='color-h'>heal</strong></button>
+        <button onclick="build.sortTech('bot')" class='sort-button color-bot' style="border-radius: 0px;">bot</button>
+        <button onclick="build.sortTech('duplic')" class='sort-button'><strong class='color-dup'>dup</strong></button>
         <input type="search" id="sort-input" style="width: 7.5em;font-size: 0.6em;color:#000;" placeholder="sort by" />
         <button onclick="build.sortTech('input', true)" class='sort-button' style="border-radius: 0em;border: 1.5px #000 solid;font-size: 0.6em;" value="damage">sort</button>
     </div>
@@ -902,15 +930,15 @@ ${simulation.difficultyMode > 4 ? `<details id="constraints-details" style="padd
 </div>`
         const hideStyle = `style="height:auto; border: none; background-color: transparent;"`
         for (let i = 0, len = m.fieldUpgrades.length; i < len; i++) {
-            text += `<div id="field-${i}" class="experiment-grid-module card-background ${m.fieldMode === i ? " build-field-selected" : ""}" onclick="build.choosePowerUp(${i},'field')" ${hideStyle} >
+            text += `<div id="field-${i}" class="experiment-grid-module card-background ${m.fieldMode === i ? " build-field-selected" : ""}" onclick="build.choosePowerUp(${i},'field');" ${hideStyle} >
                             <div class="card-text">
-                                <div class="grid-title"><div class="circle-grid-title field"></div> &nbsp; ${build.nameLink(m.fieldUpgrades[i].name)}</div>
+                                <div class="grid-title"><div class="circle-grid-title field" onclick="speechHandler.speech('${m.fieldUpgrades[i].name}')"></div> &nbsp; ${build.nameLink(m.fieldUpgrades[i].name)}</div>
                                 ${m.fieldUpgrades[i].description}</div> </div>`
         }
         for (let i = 0, len = b.guns.length; i < len; i++) {
             text += `<div id="gun-${i}" class="experiment-grid-module card-background ${b.guns[i].have ? " build-gun-selected" : ""}" onclick="build.choosePowerUp(${i},'gun')" ${hideStyle} >
                         <div class="card-text">
-                            <div class="grid-title"><div class="circle-grid-title gun"></div> &nbsp; ${build.nameLink(b.guns[i].name)}</div>
+                            <div class="grid-title"><div class="circle-grid-title gun" onclick="speechHandler.speech('${b.guns[i].name}')"></div> &nbsp; ${build.nameLink(b.guns[i].name)}</div>
                             ${b.guns[i].descriptionFunction()}</div> </div>`
         }
         for (let i = 0, len = tech.tech.length; i < len; i++) {
@@ -920,13 +948,14 @@ ${simulation.difficultyMode > 4 ? `<details id="constraints-details" style="padd
                 } else { //disabled
                     text += `<div id="tech-${i}" class="experiment-grid-module card-background experiment-grid-disabled" ${hideStyle}>`
                 }
-
                 if (tech.tech[i].isFieldTech) {
                     text += build.fieldTechText(i)
                 } else if (tech.tech[i].isGunTech) {
                     text += build.gunTechText(i)
                 } else if (tech.tech[i].isSkin) {
                     text += build.skinTechText(i)
+                } else if (tech.tech[i].isSkinUpgrade) {
+                    text += build.skinTechUpgradeText(i)
                 } else if (tech.tech[i].isJunk) {
                     text += build.junkTechText(i)
                 } else if (tech.tech[i].isInstant) {
@@ -969,6 +998,7 @@ ${simulation.difficultyMode > 4 ? `<details id="constraints-details" style="padd
         build.isExperimentSelection = true;
         build.isExperimentRun = true;
         simulation.paused = true;
+        powerUps.totalUsed = 0
         b.inventory = []; //removes guns and ammo
         for (let i = 0, len = b.guns.length; i < len; ++i) {
             b.guns[i].count = 0;
@@ -1370,39 +1400,39 @@ window.addEventListener("keydown", function (event) {
                         mouseMove.reset()
                     }
 
-                    if (tech.isPauseSwitchField || simulation.testing) {
-                        document.getElementById("pause-field-previous").addEventListener("click", () => {
-                            const energy = m.energy //save current energy
-                            if (m.fieldMode === 4 && simulation.molecularMode > 0) {
-                                simulation.molecularMode--
-                                m.fieldUpgrades[4].description = m.fieldUpgrades[4].setDescription()
-                            } else {
-                                m.setField((m.fieldMode < 2) ? m.fieldUpgrades.length - 1 : m.fieldMode - 1) //cycle to previous field, skip field emitter
-                                if (m.fieldMode === 4) {
-                                    simulation.molecularMode = 3
-                                    m.fieldUpgrades[4].description = m.fieldUpgrades[4].setDescription()
-                                }
-                            }
-                            m.energy = energy //return to current energy
-                            document.getElementById("pause-field").innerHTML = `<div class="card-text"> <div class="grid-title"><div class="circle-grid field"></div> &nbsp; ${build.nameLink(m.fieldUpgrades[m.fieldMode].name)}</div>${m.fieldUpgrades[m.fieldMode].description}</div>`
-                        });
+                    // if (tech.isPauseSwitchField || simulation.testing) {
+                    //     document.getElementById("pause-field-previous").addEventListener("click", () => {
+                    //         const energy = m.energy //save current energy
+                    //         if (m.fieldMode === 4 && simulation.molecularMode > 0) {
+                    //             simulation.molecularMode--
+                    //             m.fieldUpgrades[4].description = m.fieldUpgrades[4].setDescription()
+                    //         } else {
+                    //             m.setField((m.fieldMode < 2) ? m.fieldUpgrades.length - 1 : m.fieldMode - 1) //cycle to previous field, skip field emitter
+                    //             if (m.fieldMode === 4) {
+                    //                 simulation.molecularMode = 3
+                    //                 m.fieldUpgrades[4].description = m.fieldUpgrades[4].setDescription()
+                    //             }
+                    //         }
+                    //         m.energy = energy //return to current energy
+                    //         document.getElementById("pause-field").innerHTML = `<div class="card-text"> <div class="grid-title"><div class="circle-grid field"></div> &nbsp; ${build.nameLink(m.fieldUpgrades[m.fieldMode].name)}</div>${m.fieldUpgrades[m.fieldMode].description}</div>`
+                    //     });
 
-                        document.getElementById("pause-field-next").addEventListener("click", () => {
-                            const energy = m.energy //save current energy
-                            if (m.fieldMode === 4 && simulation.molecularMode < 3) {
-                                simulation.molecularMode++
-                                m.fieldUpgrades[4].description = m.fieldUpgrades[4].setDescription()
-                            } else {
-                                m.setField((m.fieldMode === m.fieldUpgrades.length - 1) ? 1 : m.fieldMode + 1) //cycle to next field, skip field emitter
-                                if (m.fieldMode === 4) {
-                                    simulation.molecularMode = 0
-                                    m.fieldUpgrades[4].description = m.fieldUpgrades[4].setDescription()
-                                }
-                            }
-                            m.energy = energy //return to current energy
-                            document.getElementById("pause-field").innerHTML = `<div class="card-text"> <div class="grid-title"><div class="circle-grid field"></div> &nbsp; ${build.nameLink(m.fieldUpgrades[m.fieldMode].name)}</div> ${m.fieldUpgrades[m.fieldMode].description}</div>`
-                        });
-                    }
+                    //     document.getElementById("pause-field-next").addEventListener("click", () => {
+                    //         const energy = m.energy //save current energy
+                    //         if (m.fieldMode === 4 && simulation.molecularMode < 3) {
+                    //             simulation.molecularMode++
+                    //             m.fieldUpgrades[4].description = m.fieldUpgrades[4].setDescription()
+                    //         } else {
+                    //             m.setField((m.fieldMode === m.fieldUpgrades.length - 1) ? 1 : m.fieldMode + 1) //cycle to next field, skip field emitter
+                    //             if (m.fieldMode === 4) {
+                    //                 simulation.molecularMode = 0
+                    //                 m.fieldUpgrades[4].description = m.fieldUpgrades[4].setDescription()
+                    //             }
+                    //         }
+                    //         m.energy = energy //return to current energy
+                    //         document.getElementById("pause-field").innerHTML = `<div class="card-text"> <div class="grid-title"><div class="circle-grid field"></div> &nbsp; ${build.nameLink(m.fieldUpgrades[m.fieldMode].name)}</div> ${m.fieldUpgrades[m.fieldMode].description}</div>`
+                    //     });
+                    // }
                 }
             }
             break
@@ -1560,7 +1590,7 @@ window.addEventListener("keydown", function (event) {
                     <td class='key-used'>zoom out / in</td>
                 </tr>
                 <tr>
-                    <td class='key-input-pause'>1-8</td>
+                    <td class='key-input-pause'>1-9</td>
                     <td class='key-used'>spawn things</td>
                 </tr>
                 <tr>
@@ -1654,6 +1684,9 @@ window.addEventListener("keydown", function (event) {
                 break
             case "8":
                 spawn.randomLevelBoss(simulation.mouseInGame.x, simulation.mouseInGame.y);
+                break
+            case "9":
+                powerUps.warp.effect()
                 break
             case "f":
                 const mode = (m.fieldMode === m.fieldUpgrades.length - 1) ? 0 : m.fieldMode + 1

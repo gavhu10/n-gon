@@ -14,9 +14,82 @@ const Engine = Matter.Engine,
 // create an engine
 const engine = Engine.create();
 engine.world.gravity.scale = 0; //turn off gravity (it's added back in later)
-// engine.velocityIterations = 100
-// engine.positionIterations = 100
 // engine.enableSleeping = true
+
+//to reduce lag, maybe
+engine.constraintIterations = 1; //default is 2
+// engine.positionIterations = 4; //default is 6
+// engine.velocityIterations = 2; //default is 4
+
+
+
+// const removalQueue = [];
+
+// // Helper to queue any type of removal
+// function queueRemoval(type, index) {
+//     // Avoid duplicate entries
+//     if (!removalQueue.some(r => r.type === type && r.index === index)) {
+//         removalQueue.push({ type, index });
+//     }
+// }
+
+// Events.on(engine, 'afterUpdate', () => {
+//     // Grouped by type, sort each group descending so splices don't shift indices
+//     const types = ['map', 'body', 'mob', 'powerUp', 'cons', 'consBB', 'bullet', 'composite'];
+
+//     types.forEach(type => {
+//         const entries = removalQueue
+//             .filter(r => r.type === type)
+//             .map(r => r.index)
+//             .sort((a, b) => b - a);
+
+//         entries.forEach(i => {
+//             switch (type) {
+//                 case 'map':
+//                     Matter.Composite.remove(engine.world, map[i]);
+//                     map.splice(i, 1);
+//                     break;
+//                 case 'body':
+//                     Matter.Composite.remove(engine.world, body[i]);
+//                     body.splice(i, 1);
+//                     break;
+//                 case 'mob':
+//                     Matter.Composite.remove(engine.world, mob[i]);
+//                     mob.splice(i, 1);
+//                     break;
+//                 case 'powerUp':
+//                     Matter.Composite.remove(engine.world, powerUp[i]);
+//                     powerUp.splice(i, 1);
+//                     break;
+//                 case 'cons':
+//                     Matter.Composite.remove(engine.world, cons[i]);
+//                     cons.splice(i, 1);
+//                     break;
+//                 case 'consBB':
+//                     Matter.Composite.remove(engine.world, consBB[i]);
+//                     consBB.splice(i, 1);
+//                     break;
+//                 case 'bullet':
+//                     Matter.Composite.remove(engine.world, bullet[i]);
+//                     bullet.splice(i, 1);
+//                     break;
+//                 case 'composite':
+//                     Matter.Composite.remove(engine.world, composite[i]);
+//                     composite.splice(i, 1);
+//                     break;
+//             }
+//         });
+//     });
+
+//     removalQueue.length = 0;
+// });
+
+
+
+
+
+
+
 
 // matter events
 function playerOnGroundCheck(event) {
@@ -42,14 +115,36 @@ function playerOnGroundCheck(event) {
                     m.yOff = m.yOffWhen.jump;
                     m.hardLandCD = m.cycle + m.hardLandCDScale * Math.min(momentum / 6.5 - 6, 40)
                     // m.hardLandCD = m.cycle + m.hardLandCDScale * Math.min(0.2 * momentum - 7.5, 60)
+                    if (tech.isFallWave && tech.isFallingDamage && momentum < 150) {
+                        simulation.ephemera.push({
+                            count: Math.floor(0.13 * m.hardLandCDScale * (momentum / 6.5 - 6)), //cycles before it self removes
+                            where: { x: m.pos.x, y: m.pos.y + 140 },
+                            do() {
+                                this.count--
+                                if (this.count < 0) simulation.removeEphemera(this)
+                                b.isoWave360Solo(this.where, 400 * Math.sqrt(tech.bulletsLastLonger))
+                            },
+                        })
+                    }
                 } else {
                     m.yOffGoal = m.yOffWhen.stand;
                 }
                 //falling damage
                 if (tech.isFallingDamage && m.immuneCycle < m.cycle && momentum > 150) {
                     // m.takeDamage(Math.min(Math.sqrt(momentum - 100) * 0.02, 0.4) * spawn.dmgToPlayerByLevelsCleared());
-                    m.takeDamage(Math.min(Math.sqrt(momentum - 100) * 0.04, 0.8));
-                    // m.takeDamage(20);
+                    const dmg = Math.min(Math.sqrt(momentum - 100) * 0.04, 0.8)
+                    m.takeDamage(dmg);
+                    if (tech.isFallWave) {
+                        simulation.ephemera.push({
+                            count: Math.floor(0.13 * m.hardLandCDScale * (momentum / 6.5 - 6)), //cycles before it self removes
+                            where: { x: m.pos.x, y: m.pos.y + 140 },
+                            do() {
+                                this.count--
+                                if (this.count < 0) simulation.removeEphemera(this)
+                                b.isoWave360Solo(this.where, 4000 * Math.sqrt(tech.bulletsLastLonger))
+                            },
+                        })
+                    }
                     if (m.immuneCycle < m.cycle + m.collisionImmuneCycles) m.immuneCycle = m.cycle + m.collisionImmuneCycles; //player is immune to damage for 30 cycles
                 }
             }
@@ -127,8 +222,14 @@ function collisionChecks(event) {
                             simulation.trails(90)
                             simulation.inGameConsole(`simulation.amplitude <span class='color-symbol'>=</span> ${Math.random()}`);
                         }
-                        if (tech.isPiezo) m.energy += 20.48 * level.isReducedRegen;
-                        if (tech.isExplodeContact) b.explosion(m.pos, 450);
+                        if (tech.isPiezo) {
+                            m.energy += 20.48 * level.isReducedRegen;
+                            for (let i = 0; i < 9; i++)simulation.energyGenGraphic()
+                        }
+                        if (tech.isConchoidal) {
+                            m.damageDone /= tech.conchoidalDamage
+                            tech.conchoidalDamage = 1
+                        }
 
                         if (tech.isCouplingNoHit && m.coupling > 0) {
                             m.couplingChange(-3)
